@@ -194,7 +194,7 @@ export const DonghuaDetail = () => {
              </div>
              
              {anime.episode_list && anime.episode_list.length > 0 && (
-                <Link to={`/donghua/watch/${anime.episode_list[0].id}`} className="block">
+                <Link to={`/donghua/watch/${anime.episode_list[anime.episode_list.length - 1].id}`} className="block">
                   <Button className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(124,58,237,0.4)] animate-pulse-glow">
                      <Play className="fill-white w-5 h-5 mr-2" /> {t.details.startWatching}
                   </Button>

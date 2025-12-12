@@ -16,7 +16,8 @@ interface AppState {
   removeFromWatchlist: (animeId: string) => void;
   isInWatchlist: (animeId: string) => boolean;
   
-  addToHistory: (anime: Anime) => void;
+  // Updated to accept episode details for display in history card
+  addToHistory: (anime: Anime, episodeTitle?: string) => void;
   removeFromHistory: (animeId: string) => void;
   clearHistory: () => void;
   
@@ -44,10 +45,19 @@ export const useAppStore = create<AppState>()(
       
       isInWatchlist: (id) => get().watchlist.some((a) => a.id === id),
       
-      addToHistory: (anime) => set((state) => {
+      addToHistory: (anime, episodeTitle) => set((state) => {
         // Remove if exists to push to top
         const filtered = state.history.filter(a => a.id !== anime.id);
-        return { history: [anime, ...filtered].slice(0, 50) }; // Limit to 50 items
+        
+        // Create updated anime object with current episode info for the card
+        const updatedAnime = { 
+          ...anime, 
+          // If episodeTitle provided (e.g. "Episode 5"), update the 'episode' field for the UI
+          episode: episodeTitle ? episodeTitle.replace(/Episode\s+/i, '') : anime.episode,
+          last_update: new Date().toISOString() // Track when it was watched
+        };
+
+        return { history: [updatedAnime, ...filtered].slice(0, 50) }; // Limit to 50 items
       }),
 
       removeFromHistory: (id) => set((state) => ({

@@ -8,9 +8,27 @@ import { Clock, Trash2, ArrowLeft } from 'lucide-react';
 import { translations } from '../utils/translations';
 
 export const History = () => {
-  const { history, clearHistory, removeFromHistory, language } = useAppStore();
+  const { history, clearHistory, removeFromHistory, watchHistory, language } = useAppStore();
   const navigate = useNavigate();
   const t = translations[language];
+
+  // Helper to format date relative (e.g. "2 mins ago")
+  const timeSince = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " mins ago";
+    return Math.floor(seconds) + " seconds ago";
+  };
 
   return (
     <div className="min-h-screen bg-[#020617] pt-28 px-6 pb-20">
@@ -45,21 +63,38 @@ export const History = () => {
              </div>
           ) : (
              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                {history.map((anime) => (
-                   <div key={anime.id} className="relative group">
-                      <AnimeCard anime={anime} />
-                      <button 
-                        onClick={(e) => {
-                           e.preventDefault();
-                           removeFromHistory(anime.id);
-                        }}
-                        className="absolute top-3 right-3 bg-red-600/90 backdrop-blur p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-all text-white hover:bg-red-700 hover:scale-110 shadow-lg z-20"
-                        title="Remove from history"
-                      >
-                         <Trash2 className="w-4 h-4" />
-                      </button>
-                   </div>
-                ))}
+                {history.map((anime) => {
+                   // Calculate the link to the *exact* episode ID stored in watchHistory
+                   // This ensures clicking the card resumes the video immediately
+                   const lastWatchedEpisodeId = watchHistory[anime.id];
+                   const isDonghua = anime.isDonghua;
+                   const resumeLink = lastWatchedEpisodeId 
+                      ? `/${isDonghua ? 'donghua/watch' : 'watch'}/${lastWatchedEpisodeId}` 
+                      : undefined;
+
+                   return (
+                     <div key={anime.id} className="relative group">
+                        <AnimeCard anime={anime} overrideLink={resumeLink} />
+                        
+                        {/* Overlay Last Seen Time */}
+                        <div className="absolute bottom-20 left-2 bg-black/70 backdrop-blur-sm text-[10px] text-white px-2 py-1 rounded border border-white/10 shadow-sm z-10 pointer-events-none">
+                            <Clock className="w-3 h-3 inline mr-1 text-blue-400" />
+                            {timeSince(anime.last_update)}
+                        </div>
+
+                        <button 
+                          onClick={(e) => {
+                             e.preventDefault();
+                             removeFromHistory(anime.id);
+                          }}
+                          className="absolute top-3 right-3 bg-red-600/90 backdrop-blur p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-all text-white hover:bg-red-700 hover:scale-110 shadow-lg z-20"
+                          title="Remove from history"
+                        >
+                           <Trash2 className="w-4 h-4" />
+                        </button>
+                     </div>
+                   );
+                })}
              </div>
           )}
        </div>

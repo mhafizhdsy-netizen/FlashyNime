@@ -100,19 +100,19 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
     setProgress(0);
   };
 
-  if (!featured.length) return <div className="h-[80vh] w-full bg-slate-900 animate-pulse" />;
+  if (!featured.length) return <div className="aspect-video w-full bg-slate-900 animate-pulse" />;
 
   const currentAnime = featured[currentIndex];
 
   return (
-    <div className="relative w-full h-[85vh] md:h-[90vh] overflow-hidden bg-[#020617] group select-none">
+    <div className="relative w-full aspect-video overflow-hidden bg-[#020617] group select-none shadow-2xl">
       {/* Background Image Layer */}
       <div className="absolute inset-0 transition-all duration-700 ease-in-out">
          <div key={currentAnime.id} className="absolute inset-0 animate-fade-in">
             <img 
                 src={currentAnime.poster} 
                 alt={currentAnime.title} 
-                className="w-full h-full object-cover object-center md:object-top opacity-60 scale-105 group-hover:scale-100 transition-transform duration-[10s] ease-linear" 
+                className="w-full h-full object-cover object-top opacity-60 scale-105 group-hover:scale-100 transition-transform duration-[10s] ease-linear" 
                 draggable="false"
             />
          </div>
@@ -126,74 +126,74 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
       <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 z-30 pointer-events-none">
         <button 
             onClick={handlePrev}
-            className="pointer-events-auto w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-violet-600 hover:border-violet-500 transition-all opacity-0 group-hover:opacity-100 -translate-x-10 group-hover:translate-x-0 duration-300 hover:scale-110"
+            className="pointer-events-auto w-10 h-10 md:w-14 md:h-14 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-violet-600 hover:border-violet-500 transition-all opacity-0 group-hover:opacity-100 -translate-x-10 group-hover:translate-x-0 duration-300 hover:scale-110"
         >
-            <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
+            <ChevronLeft className="w-5 h-5 md:w-8 md:h-8" />
         </button>
         <button 
             onClick={handleNext}
-            className="pointer-events-auto w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-violet-600 hover:border-violet-500 transition-all opacity-0 group-hover:opacity-100 translate-x-10 group-hover:translate-x-0 duration-300 hover:scale-110"
+            className="pointer-events-auto w-10 h-10 md:w-14 md:h-14 rounded-full bg-black/20 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-violet-600 hover:border-violet-500 transition-all opacity-0 group-hover:opacity-100 translate-x-10 group-hover:translate-x-0 duration-300 hover:scale-110"
         >
-            <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
+            <ChevronRight className="w-5 h-5 md:w-8 md:h-8" />
         </button>
       </div>
 
       {/* Main Content */}
       <div className="absolute inset-0 flex items-center">
-        <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 w-full h-full pt-20 pb-10">
+        <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 w-full h-full pb-4">
           
           {/* Left Content */}
-          <div className="col-span-1 lg:col-span-7 flex flex-col justify-center h-full space-y-8 z-10 pointer-events-none">
-             <div className="space-y-4 animate-fade-in-up pointer-events-auto">
-                <div className="flex items-center gap-3">
-                    <Badge variant="hot" className="px-3 py-1 text-xs">
+          <div className="col-span-1 lg:col-span-7 flex flex-col justify-center h-full space-y-2 md:space-y-6 lg:space-y-8 z-10 pointer-events-none">
+             <div className="space-y-1 md:space-y-4 animate-fade-in-up pointer-events-auto">
+                <div className="flex items-center gap-2 md:gap-3">
+                    <Badge variant="hot" className="px-2 py-0.5 md:px-3 md:py-1 text-[10px] md:text-xs">
                         #{currentIndex + 1} {t.home.spotlight}
                     </Badge>
-                    <span className="text-violet-400 font-bold tracking-widest text-xs uppercase flex items-center gap-1">
+                    <span className="text-violet-400 font-bold tracking-widest text-[10px] md:text-xs uppercase flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"/> 
                         {currentAnime.type || 'TV Series'}
                     </span>
                 </div>
 
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] tracking-tighter drop-shadow-2xl line-clamp-2 md:line-clamp-3">
+                <h1 className="text-xl md:text-5xl lg:text-7xl xl:text-8xl font-black text-white leading-[1.1] md:leading-[0.9] tracking-tighter drop-shadow-2xl line-clamp-2 md:line-clamp-3">
                   {currentAnime.title}
                 </h1>
                 
-                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm md:text-base font-medium text-slate-300">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 md:gap-x-6 md:gap-y-2 text-xs md:text-sm lg:text-base font-medium text-slate-300">
                    <div className="flex items-center gap-1 text-yellow-400">
-                       <Star className="w-4 h-4 fill-current"/>
+                       <Star className="w-3 h-3 md:w-4 md:h-4 fill-current"/>
                        <span className="text-white">{rating}</span>
                    </div>
                    <div className="flex items-center gap-1">
-                       <Calendar className="w-4 h-4 text-slate-500"/>
+                       <Calendar className="w-3 h-3 md:w-4 md:h-4 text-slate-500"/>
                        <span>{currentAnime.release_day || 'Unknown'}</span>
                    </div>
                    <div className="flex items-center gap-1">
-                       <Clock className="w-4 h-4 text-slate-500"/>
+                       <Clock className="w-3 h-3 md:w-4 md:h-4 text-slate-500"/>
                        <span>{currentAnime.episode ? `${currentAnime.episode} Eps` : 'Ongoing'}</span>
                    </div>
-                   <Badge variant="outline" className="text-xs border-slate-600 text-slate-300 px-2">HD</Badge>
+                   <Badge variant="outline" className="text-[10px] md:text-xs border-slate-600 text-slate-300 px-1.5 md:px-2">HD</Badge>
                 </div>
 
                 {/* Genres */}
-                <div className="flex flex-wrap gap-2 pt-2">
+                <div className="hidden sm:flex flex-wrap gap-2 pt-2">
                   {currentAnime.genres?.slice(0, 4).map((g) => (
-                    <span key={g} className="text-xs font-semibold text-slate-400 border border-white/10 bg-white/5 px-3 py-1 rounded-full backdrop-blur-sm">
+                    <span key={g} className="text-[10px] md:text-xs font-semibold text-slate-400 border border-white/10 bg-white/5 px-2 py-0.5 md:px-3 md:py-1 rounded-full backdrop-blur-sm">
                         {g}
                     </span>
                   ))}
                 </div>
              </div>
 
-             <div className="flex items-center gap-4 animate-fade-in-up pointer-events-auto" style={{ animationDelay: '100ms' }}>
+             <div className="flex items-center gap-3 md:gap-4 animate-fade-in-up pointer-events-auto pt-2 md:pt-0" style={{ animationDelay: '100ms' }}>
                 <Link to={`${isDonghua ? '/donghua/detail' : '/anime'}/${currentAnime.id}`}>
-                  <Button className="h-14 px-8 md:px-10 text-lg rounded-2xl gap-3 shadow-[0_0_40px_rgba(124,58,237,0.5)] border border-violet-500/50">
-                    <Play className="fill-white w-5 h-5" /> {t.home.watchNow}
+                  <Button className="h-9 md:h-14 px-5 md:px-10 text-xs md:text-lg rounded-xl md:rounded-2xl gap-2 md:gap-3 shadow-[0_0_20px_rgba(124,58,237,0.3)] md:shadow-[0_0_40px_rgba(124,58,237,0.5)] border border-violet-500/50">
+                    <Play className="fill-white w-3.5 h-3.5 md:w-5 md:h-5" /> {t.home.watchNow}
                   </Button>
                 </Link>
                 <Link to={`${isDonghua ? '/donghua/detail' : '/anime'}/${currentAnime.id}`}>
-                   <Button variant="glass" className="h-14 px-8 text-lg rounded-2xl gap-3 hover:bg-white/10">
-                      <Info className="w-5 h-5" /> {t.home.details}
+                   <Button variant="glass" className="h-9 md:h-14 px-5 md:px-8 text-xs md:text-lg rounded-xl md:rounded-2xl gap-2 md:gap-3 hover:bg-white/10">
+                      <Info className="w-3.5 h-3.5 md:w-5 md:h-5" /> {t.home.details}
                    </Button>
                 </Link>
              </div>
@@ -248,7 +248,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
         </div>
 
         {/* Redesigned Dot Indicators (Mobile/Tablet) */}
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center items-center gap-3 z-20 lg:hidden pointer-events-auto">
+        <div className="absolute bottom-2 md:bottom-8 left-0 right-0 flex justify-center items-center gap-2 md:gap-3 z-20 lg:hidden pointer-events-auto">
           {featured.map((_, idx) => (
              <button
                key={idx}
@@ -257,11 +257,11 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
                   setProgress(0);
                }}
                className={`relative transition-all duration-500 ease-out group/dot ${
-                  idx === currentIndex ? 'w-8' : 'w-2 hover:w-4'
+                  idx === currentIndex ? 'w-4 md:w-8' : 'w-1.5 md:w-2 hover:w-4'
                }`}
                aria-label={`Go to slide ${idx + 1}`}
              >
-                <div className={`h-2 rounded-full transition-all duration-500 ${
+                <div className={`h-1.5 md:h-2 rounded-full transition-all duration-500 ${
                     idx === currentIndex 
                       ? 'bg-gradient-to-r from-violet-500 to-fuchsia-500 shadow-[0_0_15px_rgba(139,92,246,0.6)]' 
                       : 'bg-white/20 hover:bg-white/40'

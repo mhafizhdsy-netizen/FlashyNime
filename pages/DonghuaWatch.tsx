@@ -77,7 +77,8 @@ export const DonghuaWatch = () => {
                    ...normalizeDonghua({...animeRes.detail, slug: res.episode.anime_id}),
                    id: res.episode.anime_id,
                    english_title: animeRes.detail.english_title
-               });
+               }, res.episode.title); // Pass title for history card
+               
                if (animeRes.detail.duration) {
                    setDurationMs(parseDuration(animeRes.detail.duration));
                }

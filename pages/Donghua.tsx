@@ -23,7 +23,7 @@ export const Donghua = () => {
   if (!data) return <div className="min-h-screen bg-[#020617] flex items-center justify-center"><Spinner /></div>;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white pb-20">
+    <div className="min-h-screen bg-[#020617] text-white pb-20 pt-24 md:pt-28">
        {/* Use Latest Releases for Carousel */}
        <HeroCarousel featured={data.latest.slice(0, 5)} isDonghua={true} />
        

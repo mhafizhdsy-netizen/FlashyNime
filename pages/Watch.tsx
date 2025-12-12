@@ -80,9 +80,11 @@ export const Watch = () => {
           startTimeRef.current = Date.now(); // Mark start time
 
           if (res.episode.anime_id) {
+            // Update mapping so "Continue Watching" knows where to go
             updateHistory(res.episode.anime_id, id || '');
-            // Fetch Anime Detail to get Duration, Batch Info, and Add to History
-            fetchExtraInfo(res.episode.anime_id);
+            
+            // Fetch Anime Detail to populate history list with rich metadata
+            fetchExtraInfo(res.episode.anime_id, res.episode.title);
           }
         }
       } catch (err) {
@@ -100,7 +102,7 @@ export const Watch = () => {
   }, [id]);
 
   // Fetch Batch & Duration Data
-  const fetchExtraInfo = async (animeId: string) => {
+  const fetchExtraInfo = async (animeId: string, currentEpisodeTitle: string) => {
     try {
         const animeRes = await getAnimeDetail(animeId);
         
@@ -110,7 +112,10 @@ export const Watch = () => {
                 id: animeId,
                 english_title: animeRes.detail.english_title
             };
-            addToHistory(animeForHistory);
+            
+            // Pass the current episode title (e.g. "Episode 5") to history
+            // so the card displays the *last watched* episode number
+            addToHistory(animeForHistory, currentEpisodeTitle);
             
              // Set duration for auto-play timer
             if (animeRes.detail.duration) {

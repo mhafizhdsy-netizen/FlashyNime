@@ -22,8 +22,12 @@ export const Detail = () => {
   
   const currentId = anime?.id || id || '';
   const inWatchlist = useAppStore((state) => state.watchlist.some((a) => a.id === currentId));
-  const { addToWatchlist, removeFromWatchlist, language } = useAppStore();
+  const { addToWatchlist, removeFromWatchlist, getLastWatched, language } = useAppStore();
   const t = translations[language];
+
+  // Check if we have history for this anime to Resume
+  const lastWatchedEpisodeId = getLastWatched(currentId);
+  const lastWatchedEpisode = anime?.episode_list?.find(ep => ep.id === lastWatchedEpisodeId);
 
   const shareUrl = id ? `https://flashynime.vercel.app/#/${isDonghua ? 'donghua/detail' : 'anime'}/${id}` : '';
 
@@ -205,9 +209,18 @@ export const Detail = () => {
              </div>
              
              {anime.episode_list && anime.episode_list.length > 0 && (
-                <Link to={`/watch/${anime.episode_list[0].id}`} className="block">
+                <Link 
+                   to={lastWatchedEpisodeId 
+                        ? `/watch/${lastWatchedEpisodeId}` 
+                        : `/watch/${anime.episode_list[anime.episode_list.length - 1].id}`
+                   } 
+                   className="block"
+                >
                   <Button className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(124,58,237,0.4)] animate-pulse-glow">
-                     <Play className="fill-white w-5 h-5 mr-2" /> {t.details.startWatching}
+                     <Play className="fill-white w-5 h-5 mr-2" /> 
+                     {lastWatchedEpisodeId && lastWatchedEpisode 
+                        ? `Continue ${lastWatchedEpisode.title.toLowerCase().startsWith('episode') ? lastWatchedEpisode.title : `Episode ${lastWatchedEpisode.title}`}` 
+                        : t.details.startWatching}
                   </Button>
                 </Link>
              )}
@@ -309,9 +322,17 @@ export const Detail = () => {
                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                       {anime.episode_list?.map((ep) => (
                          <Link key={ep.id} to={`/watch/${ep.id}`}>
-                            <div className="bg-slate-800/50 hover:bg-violet-600 hover:shadow-lg hover:shadow-violet-600/30 border border-white/5 hover:border-violet-500 transition-all p-4 rounded-xl group text-center">
-                               <div className="text-xs text-slate-500 group-hover:text-violet-200 mb-1 font-mono">{ep.date}</div>
-                               <div className="font-bold text-white text-sm truncate">{ep.title}</div>
+                            <div className={`
+                                border transition-all p-4 rounded-xl group text-center
+                                ${lastWatchedEpisodeId === ep.id 
+                                    ? 'bg-violet-600/20 border-violet-500 shadow-[0_0_15px_rgba(124,58,237,0.2)]' 
+                                    : 'bg-slate-800/50 border-white/5 hover:bg-violet-600 hover:shadow-lg hover:shadow-violet-600/30 hover:border-violet-500'}
+                            `}>
+                               <div className={`text-xs mb-1 font-mono ${lastWatchedEpisodeId === ep.id ? 'text-violet-300' : 'text-slate-500 group-hover:text-violet-200'}`}>{ep.date}</div>
+                               <div className="font-bold text-white text-sm truncate flex justify-center items-center gap-2">
+                                   {lastWatchedEpisodeId === ep.id && <Play className="w-3 h-3 fill-white" />}
+                                   {ep.title}
+                               </div>
                             </div>
                          </Link>
                       ))}

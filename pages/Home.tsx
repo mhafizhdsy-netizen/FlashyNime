@@ -105,7 +105,7 @@ export const Home = () => {
   const heroItems = recent.length > 0 ? recent.slice(0, 8) : popular.slice(0, 8);
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white pb-20">
+    <div className="min-h-screen bg-[#020617] text-white pb-20 pt-24 md:pt-28">
       {heroItems.length > 0 && <HeroCarousel featured={heroItems} />}
       
       {/* Adjusted margin top to -mt-8 to prevent covering dots, was -mt-24 */}
