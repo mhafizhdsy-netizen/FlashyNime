@@ -1,16 +1,20 @@
 
-import { Anime, AnimeDetail, EpisodeDetail, ScheduleDay, Genre, BatchDetail, QualityLinks, DownloadLink, ServerQuality, VideoServer } from '../types';
+import { Anime, AnimeDetail, EpisodeDetail, ScheduleDay, Genre, BatchDetail, QualityLinks, DownloadLink, ServerQuality, VideoServer, AnimeGroup } from '../types';
 
 // New Base URL from instructions
 const BASE_URL = 'https://www.sankavollerei.com';
 
 // Helper to get a working proxy URL (kept for redundancy/CORS)
 const getProxyUrls = (targetUrl: string) => [
-  // 1. CorsProxy.io - Fast
+  // 1. CodeTabs - New addition for reliability
+  `https://api.codetabs.com/v1/proxy/?quest=${targetUrl}`,
+  // 2. CorsProxy.io - Fast but can be rate-limited
   `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-  // 2. AllOrigins - Reliable
+  // 3. ThingProxy - A reliable alternative
+  `https://thingproxy.freeboard.io/fetch/${targetUrl}`,
+  // 4. AllOrigins - Also reliable, but wraps response
   `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-  // 3. Direct (if CORS allows)
+  // 5. Direct (if CORS allows)
   targetUrl 
 ];
 
@@ -18,50 +22,43 @@ async function fetchJson<T>(endpoint: string): Promise<T> {
   const targetUrl = `${BASE_URL}${endpoint}`;
   const urlsToTry = getProxyUrls(targetUrl);
   
-  let lastError;
+  let lastError: any = new Error("All proxies failed to fetch the data.");
 
   for (const url of urlsToTry) {
     try {
       const controller = new AbortController();
-      // Increased timeout to 20s to reduce aborts on slow connections
       const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-      try {
-        const res = await fetch(url, {
-          headers: { 'Accept': 'application/json' },
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-        if (res.ok) {
-          const text = await res.text();
-          try {
-            const json = JSON.parse(text);
-            // Check for proxy wrapper or direct response
-            if (json.contents) {
-               return JSON.parse(json.contents);
-            }
-            return json;
-          } catch {
-            // If parsing fails, try next proxy
-            continue;
-          }
+      if (!res.ok) {
+        throw new Error(`Proxy request failed with status ${res.status} from ${url}`);
+      }
+      
+      const text = await res.text();
+      try {
+        let json = JSON.parse(text);
+        // Handle allorigins wrapper
+        if (json.contents) {
+           json = JSON.parse(json.contents);
         }
-      } catch (innerError: any) {
-        clearTimeout(timeoutId);
-        // Ignore abort errors from timeout
-        if (innerError.name === 'AbortError') {
-             // Treat as timeout/failure for this proxy, try next
-             lastError = new Error("Request timed out");
-             continue;
-        }
-        throw innerError;
+        return json;
+      } catch (e) {
+        throw new Error(`Proxy returned non-JSON response from ${url}`);
       }
     } catch (e) {
       lastError = e;
+      // Log the error for debugging but continue to the next proxy
+      console.warn(`A proxy has failed: ${url}`, e);
     }
   }
   
+  // If loop finishes without returning, all proxies failed.
+  console.error(`Failed to fetch data from ${endpoint}. Last error:`, lastError);
   throw new Error(`Failed to fetch data from ${endpoint}`);
 }
 
@@ -126,10 +123,19 @@ export const normalizeAnime = (data: any): Anime => {
     }
   }
 
+  // Handle inconsistent poster data (can be string or array of strings)
+  let posterUrl = '';
+  const posterData = data.poster;
+  if (typeof posterData === 'string') {
+    posterUrl = posterData;
+  } else if (Array.isArray(posterData) && posterData.length > 0 && typeof posterData[0] === 'string') {
+    posterUrl = posterData[0];
+  }
+
   return {
     title: data.title || 'Unknown',
     id: id, 
-    poster: data.poster || '',
+    poster: posterUrl,
     status: data.status || '', 
     rating: rating,
     genres: data.genreList ? data.genreList.map((g: any) => g.title) : [],
@@ -137,7 +143,8 @@ export const normalizeAnime = (data: any): Anime => {
     type: data.type || '',
     release_day: data.releasedOn || data.releaseDate || '',
     last_update: data.releasedOn || '',
-    isDonghua: false
+    isDonghua: false,
+    rank: data.rank
   };
 };
 
@@ -174,9 +181,20 @@ export const getHome = async () => {
     home: {
       recent: (homeData.recent?.animeList || []).map(normalizeAnime),
       movies: (homeData.movie?.animeList || []).map(normalizeAnime),
-      popular: (homeData.top10?.animeList || []).map(normalizeAnime),
+      popular: (homeData.top10?.animeList || []).map(normalizeAnime), // Note: Keeping popular map to top10 if API structure matches generally popular items
+      top10: (homeData.top10?.animeList || []).map(normalizeAnime),
       batch: homeData.batch?.batchList || []
     }
+  };
+};
+
+export const getAnimeListByLetter = async () => {
+  const data = await fetchJson<any>('/anime/samehadaku/list');
+  return {
+    list: (data.data?.list || []).map((group: any) => ({
+      startWith: group.startWith,
+      animeList: (group.animeList || []).map(normalizeAnime)
+    })) as AnimeGroup[]
   };
 };
 

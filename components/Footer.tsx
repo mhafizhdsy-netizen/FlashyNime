@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Zap, Github, Heart, Instagram } from 'lucide-react';
 import { useAppStore } from '../store/store';
 import { translations } from '../utils/translations';
@@ -16,9 +16,13 @@ const TikTokIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const letters = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
+
 export const Footer = () => {
   const { language } = useAppStore();
   const t = translations[language];
+  const location = useLocation();
+  const isDonghua = location.pathname.includes('/donghua');
 
   return (
     <footer className="bg-[#020617] border-t border-white/5 pt-20 pb-10 relative overflow-hidden">
@@ -27,7 +31,7 @@ export const Footer = () => {
       
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8 mb-16">
-          <div className="col-span-1 md:col-span-6 space-y-6">
+          <div className="col-span-1 md:col-span-4 space-y-6">
             <Link to="/" className="flex items-center gap-2">
               <div className="bg-gradient-to-br from-violet-600 to-fuchsia-600 p-1.5 rounded-lg">
                 <Zap className="text-white w-5 h-5 fill-white" />
@@ -52,7 +56,7 @@ export const Footer = () => {
             </div>
           </div>
 
-          <div className="col-span-1 md:col-span-3">
+          <div className="col-span-1 md:col-span-2">
             <h4 className="text-white font-bold mb-6 flex items-center gap-2">Anime</h4>
             <ul className="space-y-3 text-sm text-slate-400">
               <li><Link to="/browse?status=ongoing" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.browse.filters.ongoing}</Link></li>
@@ -64,7 +68,7 @@ export const Footer = () => {
             </ul>
           </div>
 
-          <div className="col-span-1 md:col-span-3">
+          <div className="col-span-1 md:col-span-2">
             <h4 className="text-white font-bold mb-6 flex items-center gap-2">Donghua</h4>
             <ul className="space-y-3 text-sm text-slate-400">
               <li><Link to="/donghua" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.home}</Link></li>
@@ -74,6 +78,23 @@ export const Footer = () => {
               <li><Link to="/donghua/schedule" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.schedule}</Link></li>
             </ul>
           </div>
+
+          {!isDonghua && (
+            <div className="col-span-1 md:col-span-4">
+              <h4 className="text-white font-bold mb-6">Browse A-Z</h4>
+              <div className="flex flex-wrap gap-2">
+                  {letters.map((l) => (
+                    <Link 
+                      key={l} 
+                      to={`/browse?letter=${l}`}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white text-sm font-bold transition-all border border-white/5 hover:border-violet-500"
+                    >
+                        {l}
+                    </Link>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">

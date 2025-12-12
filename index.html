@@ -95,6 +95,10 @@
       .text-glow {
         text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
       }
+      .mask-image-lr {
+        mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+      }
     </style>
   <script type="importmap">
 {
@@ -108,7 +112,8 @@
     "zustand/": "https://esm.sh/zustand@^5.0.9/",
     "zustand": "https://esm.sh/zustand@^5.0.9",
     "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
-    "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@^1.2.0"
+    "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@^1.2.0",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3"
   }
 }
 </script>

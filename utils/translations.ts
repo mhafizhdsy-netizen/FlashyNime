@@ -1,4 +1,3 @@
-
 export const translations = {
   en: {
     nav: {
@@ -26,7 +25,9 @@ export const translations = {
       upNext: "Up Next",
       connectionLost: "Connection Lost",
       retry: "Retry Connection",
-      unableToReach: "Unable to reach the anime dimension."
+      unableToReach: "Unable to reach the anime dimension.",
+      top10Ranking: "Top 10 Ranking",
+      top10Desc: "Based on weekly user engagement."
     },
     details: {
       synopsis: "Synopsis",
@@ -166,7 +167,9 @@ export const translations = {
       upNext: "Selanjutnya",
       connectionLost: "Koneksi Terputus",
       retry: "Coba Lagi",
-      unableToReach: "Tidak dapat menjangkau dimensi anime."
+      unableToReach: "Tidak dapat menjangkau dimensi anime.",
+      top10Ranking: "Peringkat 10 Teratas",
+      top10Desc: "Berdasarkan interaksi pengguna mingguan."
     },
     details: {
       synopsis: "Sinopsis",

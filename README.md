@@ -108,7 +108,7 @@ FlashyNime uses a custom scraping API endpoint structure targeting `sankavollere
 | **Search** | `/anime/samehadaku/search?q={query}` | Search functionality. |
 | **Donghua** | `/anime/donghua/home/{page}` | Donghua specific home data. |
 
-*Note: The API logic includes a robust proxy fallback mechanism (CorsProxy.io, AllOrigins) to handle CORS issues in browser environments.*
+*Note: The API logic includes a robust proxy fallback mechanism using several public CORS proxies (e.g., CorsProxy.io, ThingProxy, AllOrigins) to handle CORS issues in browser environments. Public proxies can sometimes be unreliable; the app is designed to try multiple proxies to increase success rates.*
 
 ## 📄 License
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, Bookmark, Zap, Shuffle, Clock, ChevronDown, Languages, Info } from 'lucide-react';
@@ -109,7 +108,7 @@ export const Navbar = () => {
 
                       {/* Dropdown Menu */}
                       <div className={`
-                         absolute top-full left-0 mt-2 w-48 bg-[#0f172a] border border-white/10 rounded-xl shadow-xl overflow-hidden transition-all duration-200 origin-top
+                         absolute top-full left-0 mt-2 w-48 bg-[#0f172a] border border-white/10 rounded-xl shadow-xl overflow-hidden transition-all duration-200 origin-top z-50
                          ${isDropdownOpen ? 'opacity-100 visible translate-y-0 scale-100' : 'opacity-0 invisible -translate-y-2 scale-95'}
                       `}>
                          <div className="p-1.5 flex flex-col gap-1">

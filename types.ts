@@ -11,6 +11,7 @@ export interface Anime {
   release_day?: string; // Mapped from releasedOn
   last_update?: string;
   isDonghua?: boolean; // New flag to identify content type
+  rank?: number; // For Top 10
 }
 
 export interface DownloadLink {
@@ -88,10 +89,16 @@ export interface ScheduleDay {
   animeList: any[]; // Raw list to be normalized
 }
 
+export interface AnimeGroup {
+  startWith: string;
+  animeList: Anime[];
+}
+
 export interface HomeData {
   recent: Anime[];
   popular: Anime[];
   movies: Anime[];
+  top10: Anime[];
   batch?: any[];
 }
 
