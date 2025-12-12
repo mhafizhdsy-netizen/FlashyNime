@@ -63,7 +63,7 @@ export const useAppStore = create<AppState>()(
       getLastWatched: (animeId) => get().watchHistory[animeId],
     }),
     {
-      name: 'animestream-storage',
+      name: 'flashynime-storage',
     }
   )
 );
