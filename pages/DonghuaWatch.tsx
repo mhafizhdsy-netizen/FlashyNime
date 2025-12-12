@@ -18,11 +18,18 @@ export const DonghuaWatch = () => {
   const [durationMs, setDurationMs] = useState<number>(15 * 60 * 1000); // Default 15 mins for Donghua
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(10);
+  
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const autoPlayRef = useRef(autoPlay);
 
   const navigate = useNavigate();
   const { updateHistory, addToHistory } = useAppStore();
+
+  useEffect(() => {
+    autoPlayRef.current = autoPlay;
+  }, [autoPlay]);
 
   const parseDuration = (durStr: string) => {
     const match = durStr.match(/(\d+)/);
@@ -32,10 +39,26 @@ export const DonghuaWatch = () => {
     return 15 * 60 * 1000;
   };
 
+  const prepareUrl = (url: string) => {
+      if (!url) return '';
+      try {
+        const u = new URL(url);
+        if (!u.searchParams.has('autoplay')) {
+            u.searchParams.set('autoplay', '1');
+        }
+        return u.toString();
+      } catch (e) {
+          return url + (url.includes('?') ? '&autoplay=1' : '?autoplay=1');
+      }
+  };
+
   useEffect(() => {
     const fetchEp = async () => {
       setLoading(true);
       setShowCountdown(false);
+      setCountdownSeconds(10);
+      startTimeRef.current = 0;
+
       if (timerRef.current) clearTimeout(timerRef.current);
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
 
@@ -43,7 +66,8 @@ export const DonghuaWatch = () => {
         const res = await getDonghuaEpisode(id || '');
         if (res.episode) {
           setEpisode(res.episode);
-          setCurrentStreamUrl(res.episode.stream_link);
+          setCurrentStreamUrl(prepareUrl(res.episode.stream_link));
+          startTimeRef.current = Date.now();
           
           if (res.episode.anime_id) {
             updateHistory(res.episode.anime_id, id || '');
@@ -74,21 +98,24 @@ export const DonghuaWatch = () => {
     };
   }, [id]);
 
-  // Timer logic
+  // Timer logic - robust against durationMs updates
   useEffect(() => {
     if (loading || !currentStreamUrl || !episode?.next_episode) return;
+    
     if (timerRef.current) clearTimeout(timerRef.current);
-    setShowCountdown(false);
+
+    const elapsed = Date.now() - startTimeRef.current;
+    const remaining = Math.max(0, durationMs - elapsed);
 
     timerRef.current = setTimeout(() => {
-        if (autoPlay) {
+        if (autoPlayRef.current) {
             setShowCountdown(true);
             setCountdownSeconds(10);
         }
-    }, durationMs);
+    }, remaining);
 
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [loading, currentStreamUrl, durationMs, autoPlay, episode]);
+  }, [loading, currentStreamUrl, durationMs, episode]);
 
   // Countdown logic
   useEffect(() => {
@@ -115,10 +142,11 @@ export const DonghuaWatch = () => {
   };
 
   const handleServerClick = (server: VideoServer) => {
-    setCurrentStreamUrl(server.href);
-    // Reset timer
+    setCurrentStreamUrl(prepareUrl(server.href));
+    // Reset timer logic for new video
     setShowCountdown(false);
     if (timerRef.current) clearTimeout(timerRef.current);
+    startTimeRef.current = Date.now();
   };
 
   if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Spinner /></div>;

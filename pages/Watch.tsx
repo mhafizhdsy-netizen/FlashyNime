@@ -21,12 +21,20 @@ export const Watch = () => {
   const [durationMs, setDurationMs] = useState<number>(24 * 60 * 1000); // Default 24 mins
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(10);
+  
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const autoPlayRef = useRef(autoPlay);
 
   const navigate = useNavigate();
   const { updateHistory, addToHistory, language } = useAppStore();
   const t = translations[language];
+
+  // Sync autoPlay state to ref to use in timeout without resetting the effect
+  useEffect(() => {
+    autoPlayRef.current = autoPlay;
+  }, [autoPlay]);
 
   // Helper to parse duration string (e.g. "24 min" -> ms)
   const parseDuration = (durStr: string) => {
@@ -38,11 +46,29 @@ export const Watch = () => {
     return 24 * 60 * 1000;
   };
 
+  // Helper to append autoplay to iframe URL
+  const prepareUrl = (url: string) => {
+      if (!url) return '';
+      try {
+        const u = new URL(url);
+        // Avoid duplicates
+        if (!u.searchParams.has('autoplay')) {
+            u.searchParams.set('autoplay', '1');
+        }
+        return u.toString();
+      } catch (e) {
+          return url + (url.includes('?') ? '&autoplay=1' : '?autoplay=1');
+      }
+  };
+
   // Fetch Episode Data
   useEffect(() => {
     const fetchEp = async () => {
       setLoading(true);
       setShowCountdown(false);
+      setCountdownSeconds(10);
+      startTimeRef.current = 0; // Reset start time for new episode
+
       if (timerRef.current) clearTimeout(timerRef.current);
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
 
@@ -50,7 +76,9 @@ export const Watch = () => {
         const res = await getEpisodeDetail(id || '');
         if (res.episode) {
           setEpisode(res.episode);
-          setCurrentStreamUrl(res.episode.stream_link); // Set default
+          setCurrentStreamUrl(prepareUrl(res.episode.stream_link)); // Set default
+          startTimeRef.current = Date.now(); // Mark start time
+
           if (res.episode.anime_id) {
             updateHistory(res.episode.anime_id, id || '');
             // Fetch Anime Detail to get Duration, Batch Info, and Add to History
@@ -77,11 +105,9 @@ export const Watch = () => {
         const animeRes = await getAnimeDetail(animeId);
         
         if (animeRes?.detail) {
-            // Fix: Explicitly include id (from param) and english_title when saving to history
-            // We cast to any to allow properties that might not be in the strict Anime interface
             const animeForHistory = {
                 ...normalizeAnime(animeRes.detail),
-                id: animeId, // Force ID to ensure link works
+                id: animeId,
                 english_title: animeRes.detail.english_title
             };
             addToHistory(animeForHistory);
@@ -91,7 +117,6 @@ export const Watch = () => {
                 setDurationMs(parseDuration(animeRes.detail.duration));
             }
 
-            // Check if the anime details contain a link to a batch
             if (animeRes.detail.batch_link?.id) {
                 const batchRes = await getBatchDetail(animeRes.detail.batch_link.id);
                 if (batchRes.batch) {
@@ -105,25 +130,29 @@ export const Watch = () => {
   };
 
   // Start "End of Episode" Simulation Timer
+  // Uses durationMs but calculates remaining time based on startTimeRef to avoid resets
   useEffect(() => {
     if (loading || !currentStreamUrl || !episode?.next_episode) return;
     
-    // Clear existing
     if (timerRef.current) clearTimeout(timerRef.current);
-    setShowCountdown(false);
+
+    // Calculate time elapsed since video started loading
+    const elapsed = Date.now() - startTimeRef.current;
+    const remaining = Math.max(0, durationMs - elapsed);
 
     // Set new timer
     timerRef.current = setTimeout(() => {
-        if (autoPlay) {
+        // Check ref inside callback to avoid stale closure issues
+        if (autoPlayRef.current) {
             setShowCountdown(true);
             setCountdownSeconds(10);
         }
-    }, durationMs);
+    }, remaining);
 
     return () => {
         if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [loading, currentStreamUrl, durationMs, autoPlay, episode]);
+  }, [loading, currentStreamUrl, durationMs, episode]); // Removed autoPlay from deps
 
   // Handle Countdown Decrement
   useEffect(() => {
@@ -132,7 +161,6 @@ export const Watch = () => {
               setCountdownSeconds(prev => prev - 1);
           }, 1000);
       } else if (showCountdown && countdownSeconds === 0) {
-           // Time up, go to next
            handleNextEpisode();
       }
 
@@ -158,11 +186,12 @@ export const Watch = () => {
     // Reset auto-play timers on server switch
     setShowCountdown(false); 
     if (timerRef.current) clearTimeout(timerRef.current);
+    startTimeRef.current = Date.now(); // Reset start time for new server
 
     try {
       const embedUrl = await getServerEmbed(server.serverId);
       if (embedUrl) {
-        setCurrentStreamUrl(embedUrl);
+        setCurrentStreamUrl(prepareUrl(embedUrl));
       }
     } catch (e) {
       console.error("Failed to load server", e);

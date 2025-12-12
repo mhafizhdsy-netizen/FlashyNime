@@ -15,6 +15,7 @@ import { BatchList } from './pages/BatchList';
 import { BatchDetail } from './pages/BatchDetail';
 import { About } from './pages/About';
 import { GenreList } from './pages/GenreList';
+import { PWAModal } from './components/PWAModal';
 
 // Donghua Pages
 import { Donghua } from './pages/Donghua';
@@ -37,6 +38,7 @@ const App: React.FC = () => {
       <ScrollToTop />
       <div className="flex flex-col min-h-screen bg-zinc-950 text-zinc-100 font-sans selection:bg-violet-500/30">
         <Navbar />
+        <PWAModal />
         <main className="flex-grow">
           <Routes>
             {/* Anime Routes */}
