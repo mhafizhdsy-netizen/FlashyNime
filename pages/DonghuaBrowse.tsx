@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
@@ -178,7 +177,7 @@ export const DonghuaBrowse = () => {
     <div className="min-h-screen bg-[#020617] pb-20">
        
        {/* --- Header & Filters (Static/Relative) --- */}
-       <div className="relative z-40 bg-[#020617] border-b border-white/5 pt-20 md:pt-24 pb-4">
+       <div className="relative z-30 bg-[#020617] border-b border-white/5 pt-20 md:pt-24 pb-4">
           <div className="container mx-auto px-4 md:px-6">
               
               {/* Top Row: Back, Title, Mobile Actions */}
