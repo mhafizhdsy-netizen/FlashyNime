@@ -2,7 +2,7 @@
 export interface Anime {
   title: string;
   id: string; // Mapped from animeId, episodeId, or batchId
-  poster: string;
+  poster: string | string[];
   status: string;
   rating?: string; // Mapped from score
   genres?: string[];
@@ -11,6 +11,7 @@ export interface Anime {
   release_day?: string; // Mapped from releasedOn
   last_update?: string;
   isDonghua?: boolean; // New flag to identify content type
+  isManga?: boolean; // New flag for Manga content
   rank?: number; // For Top 10
 }
 
@@ -48,6 +49,21 @@ export interface AnimeDetail extends Anime {
   recommendations?: Anime[];
 }
 
+export interface MangaChapterImage {
+  image: string;
+}
+
+export interface MangaReaderData {
+  title: string;
+  comicSlug: string;
+  images: string[];
+  navigation: {
+    prev: string | null;
+    next: string | null;
+  };
+  relatedSeries: Anime[];
+}
+
 export interface VideoServer {
   title: string;
   serverId: string; // For Anime: serverId used to fetch embed. For Donghua: direct URL or identifier
@@ -73,7 +89,7 @@ export interface EpisodeDetail {
 export interface BatchDetail {
   title: string;
   id: string;
-  poster: string;
+  poster: string | string[];
   status: string;
   download_links: QualityLinks[];
 }
@@ -102,4 +118,4 @@ export interface HomeData {
   batch?: any[];
 }
 
-export type CategoryType = 'anime' | 'donghua';
+export type CategoryType = 'anime' | 'donghua' | 'manga';

@@ -29,7 +29,7 @@ export const Detail = () => {
   const lastWatchedEpisodeId = getLastWatched(currentId);
   const lastWatchedEpisode = anime?.episode_list?.find(ep => ep.id === lastWatchedEpisodeId);
 
-  const shareUrl = id ? `https://flashynimeid.vercel.app/#/${isDonghua ? 'donghua/detail' : 'anime'}/${id}` : '';
+  const shareUrl = id ? `https://flashynime.vercel.app/#/${isDonghua ? 'donghua/detail' : 'anime'}/${id}` : '';
 
   const fetchDetail = async () => {
     if (!id) return;
@@ -110,10 +110,13 @@ export const Detail = () => {
     </div>
   );
 
+  const rawPoster = anime.poster;
+  const posterUrl = Array.isArray(rawPoster) && rawPoster.length > 0 ? rawPoster[0] : typeof rawPoster === 'string' ? rawPoster : '';
+
   return (
     <div className="min-h-screen bg-[#020617] text-white pb-20 overflow-x-hidden">
       {/* Back Button */}
-      <div className="absolute top-24 left-6 z-40 md:left-12">
+      <div className="absolute top-24 left-6 z-30 md:left-12">
         <Button variant="glass" onClick={() => navigate(-1)} className="rounded-full w-12 h-12 p-0 shadow-xl border-white/20 bg-black/40">
            <ArrowLeft className="w-6 h-6 text-white" />
         </Button>
@@ -179,7 +182,7 @@ export const Detail = () => {
       {/* Immersive Parallax Header */}
       <div className="relative w-full h-[65vh] overflow-hidden">
         <img 
-           src={anime.poster} 
+           src={posterUrl} 
            alt={anime.title} 
            loading="lazy"
            className="w-full h-full object-cover blur-md opacity-40 scale-110"
@@ -194,7 +197,7 @@ export const Detail = () => {
           <div className="flex-shrink-0 w-full max-w-[320px] mx-auto lg:mx-0 space-y-6 animate-fade-in-up">
              <div className="relative group rounded-2xl overflow-hidden shadow-2xl shadow-violet-900/30 border border-white/10 bg-slate-800">
                <img 
-                 src={anime.poster} 
+                 src={posterUrl} 
                  alt={anime.title} 
                  loading="lazy"
                  className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"

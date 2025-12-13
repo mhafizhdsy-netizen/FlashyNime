@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, Bookmark, Zap, Shuffle, Clock, ChevronDown, Languages, Info } from 'lucide-react';
@@ -54,6 +55,14 @@ export const Navbar = () => {
         { name: t.nav.genres, path: '/donghua/genres' },
         { name: t.nav.schedule, path: '/donghua/schedule' },
         { name: t.nav.season, path: '/donghua/browse?status=seasons' },
+      ]
+    },
+    {
+      title: 'Manga',
+      items: [
+        { name: t.nav.home, path: '/manga' },
+        { name: t.nav.browse, path: '/manga/browse' },
+        { name: t.nav.genres, path: '/manga/genres' },
       ]
     }
   ];

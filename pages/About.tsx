@@ -436,6 +436,114 @@ export const About = () => {
                  </div>
               </div>
 
+              {/* Manga Section */}
+              <div className="space-y-4">
+                 <h3 className="text-2xl font-bold text-white mb-4 pl-2 border-l-4 border-rose-500">Manga Endpoints (Mangakita)</h3>
+                 
+                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
+                       <code className="text-sm font-bold text-white">/comic/mangakita/home</code>
+                    </div>
+                    <div className="p-6">
+                       <p className="text-slate-400 text-sm mb-4">Fetches trending and latest manga releases.</p>
+                       <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Database className="w-3 h-3" /> Returns: JSON Object (MangaHome)
+                       </div>
+                    </div>
+                 </div>
+                 
+                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
+                       <code className="text-sm font-bold text-white">/comic/mangakita/list?order={'{order}'}&page={'{page}'}</code>
+                    </div>
+                    <div className="p-6">
+                       <p className="text-slate-400 text-sm mb-4">Get a paginated list of manga, sortable by criteria like 'popular' or 'update'.</p>
+                       <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Database className="w-3 h-3" /> Returns: JSON Array (MangaList)
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
+                       <code className="text-sm font-bold text-white">/comic/mangakita/projects/{'{page}'}</code>
+                    </div>
+                    <div className="p-6">
+                       <p className="text-slate-400 text-sm mb-4">Get a list of manga project updates.</p>
+                       <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Database className="w-3 h-3" /> Returns: JSON Array (MangaList)
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
+                       <code className="text-sm font-bold text-white">/comic/mangakita/genres</code>
+                    </div>
+                    <div className="p-6">
+                       <p className="text-slate-400 text-sm mb-4">Get the list of all available manga genres.</p>
+                       <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Database className="w-3 h-3" /> Returns: JSON Array (GenreList)
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
+                       <code className="text-sm font-bold text-white">/comic/mangakita/genres/{'{slug}'}/{'{page}'}</code>
+                    </div>
+                    <div className="p-6">
+                       <p className="text-slate-400 text-sm mb-4">Get manga list by a specific genre slug.</p>
+                       <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Database className="w-3 h-3" /> Returns: JSON Array (MangaList)
+                       </div>
+                    </div>
+                 </div>
+                 
+                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
+                       <code className="text-sm font-bold text-white">/comic/mangakita/search/{'{query}'}/{'{page}'}</code>
+                    </div>
+                    <div className="p-6">
+                       <p className="text-slate-400 text-sm mb-4">Search for manga by title.</p>
+                       <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Database className="w-3 h-3" /> Returns: JSON Object (SearchResults)
+                       </div>
+                    </div>
+                 </div>
+                 
+                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
+                       <code className="text-sm font-bold text-white">/comic/mangakita/detail/{'{slug}'}</code>
+                    </div>
+                    <div className="p-6">
+                       <p className="text-slate-400 text-sm mb-4">Retrieves detailed information for a specific manga, including chapter list.</p>
+                       <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Database className="w-3 h-3" /> Returns: JSON Object (MangaDetail)
+                       </div>
+                    </div>
+                 </div>
+                 
+                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
+                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
+                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
+                       <code className="text-sm font-bold text-white">/comic/mangakita/chapter/{'{slug}'}</code>
+                    </div>
+                    <div className="p-6">
+                       <p className="text-slate-400 text-sm mb-4">Fetches all image URLs for a specific manga chapter.</p>
+                       <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <Database className="w-3 h-3" /> Returns: JSON Object (MangaReaderData)
+                       </div>
+                    </div>
+                 </div>
+              </div>
            </div>
         </div>
       </div>

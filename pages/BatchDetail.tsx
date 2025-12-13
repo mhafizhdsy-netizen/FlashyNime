@@ -41,6 +41,9 @@ export const BatchDetail = () => {
         <Button onClick={() => navigate('/batch')}>{t.batch.back}</Button>
      </div>
   );
+  
+  const rawPoster = batch.poster;
+  const posterUrl = Array.isArray(rawPoster) && rawPoster.length > 0 ? rawPoster[0] : typeof rawPoster === 'string' ? rawPoster : '';
 
   return (
     <div className="min-h-screen bg-[#020617] pt-28 px-6 pb-20">
@@ -54,7 +57,7 @@ export const BatchDetail = () => {
             <div className="w-full md:w-[300px] flex-shrink-0">
                <div className="rounded-2xl overflow-hidden shadow-2xl shadow-fuchsia-900/20 border border-white/10">
                   <img 
-                      src={batch.poster} 
+                      src={posterUrl} 
                       alt={batch.title} 
                       loading="lazy"
                       className="w-full h-auto object-cover"

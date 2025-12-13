@@ -2,9 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Search as SearchIcon, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { searchAnime, searchDonghua, normalizeAnime } from '../services/api';
+import { searchAnime, searchDonghua, searchManga, normalizeAnime } from '../services/api';
 import { Anime } from '../types';
 import { AnimeCard } from '../components/AnimeCard';
+import { MangaCard } from '../components/MangaCard';
 import { Button, Spinner } from '../components/ui';
 import { useAppStore } from '../store/store';
 import { translations } from '../utils/translations';
@@ -13,7 +14,7 @@ export const Search = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Anime[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'anime' | 'donghua'>('anime');
+  const [activeTab, setActiveTab] = useState<'anime' | 'donghua' | 'manga'>('anime');
   const navigate = useNavigate();
   const { language } = useAppStore();
   const t = translations[language];
@@ -26,9 +27,12 @@ export const Search = () => {
           if (activeTab === 'anime') {
              const res = await searchAnime(query);
              setResults(res.search_results ? res.search_results.map(normalizeAnime) : []);
-          } else {
+          } else if (activeTab === 'donghua') {
              const res = await searchDonghua(query);
              setResults(res.search_results || []);
+          } else { // Manga
+             const res = await searchManga(query);
+             setResults(res.results || []);
           }
         } catch (error) {
           console.error(error);
@@ -42,6 +46,12 @@ export const Search = () => {
     }, 600);
     return () => clearTimeout(delayDebounceFn);
   }, [query, activeTab]);
+
+  const handleTabChange = (tab: 'anime' | 'donghua' | 'manga') => {
+    setActiveTab(tab);
+    setQuery('');
+    setResults([]);
+  };
 
   return (
     <div className="min-h-screen bg-[#020617] pt-28 px-6 pb-20">
@@ -73,17 +83,24 @@ export const Search = () => {
           <div className="flex justify-center gap-4 mb-12 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
              <Button 
                variant={activeTab === 'anime' ? 'primary' : 'secondary'}
-               onClick={() => { setActiveTab('anime'); setQuery(''); setResults([]); }}
+               onClick={() => handleTabChange('anime')}
                className="w-32 rounded-full"
              >
                {t.search.type.anime}
              </Button>
              <Button 
                variant={activeTab === 'donghua' ? 'primary' : 'secondary'}
-               onClick={() => { setActiveTab('donghua'); setQuery(''); setResults([]); }}
+               onClick={() => handleTabChange('donghua')}
                className="w-32 rounded-full"
              >
                {t.search.type.donghua}
+             </Button>
+             <Button 
+               variant={activeTab === 'manga' ? 'primary' : 'secondary'}
+               onClick={() => handleTabChange('manga')}
+               className="w-32 rounded-full"
+             >
+               {t.search.type.manga}
              </Button>
           </div>
 
@@ -92,9 +109,16 @@ export const Search = () => {
           ) : (
              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {results.length > 0 ? (
-                   results.map((anime, idx) => (
-                      <div key={`${anime.id}-${idx}`} className="animate-scale-in" style={{ animationDelay: `${idx * 50}ms` }}>
-                          <AnimeCard anime={anime} isDonghua={activeTab === 'donghua'} />
+                   results.map((item, idx) => (
+                      <div key={`${item.id}-${idx}`} className="animate-scale-in" style={{ animationDelay: `${idx * 50}ms` }}>
+                          {activeTab === 'manga' ? (
+                            <MangaCard manga={item} />
+                          ) : (
+                            <AnimeCard 
+                               anime={item} 
+                               isDonghua={activeTab === 'donghua'}
+                            />
+                          )}
                       </div>
                    ))
                 ) : (

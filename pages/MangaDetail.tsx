@@ -1,38 +1,39 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Play, Calendar, Clock, Star, Bookmark, Share2, Check, Copy, X, Facebook, Twitter, RefreshCw, Trash2, ArrowLeft, ChevronDown } from 'lucide-react';
-import { getDonghuaDetail, normalizeDonghua } from '../services/api';
+import { BookOpen, Calendar, Clock, Star, Bookmark, Share2, Check, Copy, X, Facebook, Twitter, RefreshCw, Trash2, ArrowLeft, ChevronDown } from 'lucide-react';
+import { getMangaDetail, normalizeManga } from '../services/api';
 import { AnimeDetail as AnimeDetailType } from '../types';
 import { Button, Badge, Skeleton } from '../components/ui';
 import { useAppStore } from '../store/store';
 import { translations } from '../utils/translations';
 
-export const DonghuaDetail = () => {
-  const { id } = useParams<{ id: string }>();
+export const MangaDetail = () => {
+  const { id } = useParams<{ id: string }>(); // id here is the slug
   const navigate = useNavigate();
-  const [anime, setAnime] = useState<AnimeDetailType | null>(null);
+  const [manga, setManga] = useState<AnimeDetailType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [toast, setToast] = useState<{ show: boolean; message: string; type: 'add' | 'remove' }>({ show: false, message: '', type: 'add' });
+  const [isPosterLoaded, setIsPosterLoaded] = useState(false);
   
-  const currentId = anime?.id || id || '';
+  const currentId = manga?.id || id || '';
   const inWatchlist = useAppStore((state) => state.watchlist.some((a) => a.id === currentId));
   const { addToWatchlist, removeFromWatchlist, language } = useAppStore();
   const t = translations[language];
 
-  const shareUrl = id ? `https://flashynime.vercel.app/#/donghua/detail/${id}` : '';
+  const shareUrl = id ? `https://flashynime.vercel.app/#/manga/detail/${id}` : '';
 
   const fetchDetail = async () => {
     if (!id) return;
     setLoading(true);
     setError(false);
     try {
-      const res = await getDonghuaDetail(id);
+      const res = await getMangaDetail(id);
       if (res?.detail) {
-        setAnime(res.detail);
+        setManga(res.detail);
       } else {
         setError(true);
       }
@@ -49,17 +50,17 @@ export const DonghuaDetail = () => {
   }, [id]);
 
   const toggleWatchlist = () => {
-    if (!anime) return;
+    if (!manga) return;
     if (inWatchlist) {
-      removeFromWatchlist(anime.id || id!);
+      removeFromWatchlist(manga.id || id!);
       setToast({ show: true, message: t.details.successRemoved, type: 'remove' });
     } else {
-      const safeId = anime.id || id!; 
+      const safeId = manga.id || id!; 
       const animeToSave = {
-        ...normalizeDonghua({...anime, slug: safeId}),
+        ...normalizeManga({...manga, slug: safeId}),
         id: safeId,
-        english_title: anime.english_title, 
-        isDonghua: true
+        english_title: manga.english_title, 
+        isManga: true
       };
       
       addToWatchlist(animeToSave);
@@ -85,23 +86,22 @@ export const DonghuaDetail = () => {
     </div>
   );
 
-  if (error || !anime) return (
+  if (error || !manga) return (
     <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center p-6 text-center">
-       <h2 className="text-3xl font-bold text-white mb-4">Donghua Not Found</h2>
+       <h2 className="text-3xl font-bold text-white mb-4">Manga Not Found</h2>
        <p className="text-slate-400 mb-6">Could not load data for ID: {id}</p>
        <div className="flex gap-4">
-         <Link to="/donghua"><Button variant="secondary">{t.watch.goBack}</Button></Link>
+         <Link to="/manga"><Button variant="secondary">{t.watch.goBack}</Button></Link>
          <Button onClick={fetchDetail} variant="primary"><RefreshCw className="w-4 h-4 mr-2"/> {t.home.retry}</Button>
        </div>
     </div>
   );
   
-  const rawPoster = anime.poster;
+  const rawPoster = manga.poster;
   const posterUrl = Array.isArray(rawPoster) && rawPoster.length > 0 ? rawPoster[0] : typeof rawPoster === 'string' ? rawPoster : '';
 
   return (
     <div className="min-h-screen bg-[#020617] text-white pb-20 overflow-x-hidden">
-      {/* Back Button */}
       <div className="absolute top-24 left-6 z-30 md:left-12">
         <Button variant="glass" onClick={() => navigate(-1)} className="rounded-full w-12 h-12 p-0 shadow-xl border-white/20 bg-black/40">
            <ArrowLeft className="w-6 h-6 text-white" />
@@ -132,7 +132,7 @@ export const DonghuaDetail = () => {
                 </button>
                 
                 <h3 className="text-xl font-bold text-white mb-2">{t.details.shareTitle}</h3>
-                <p className="text-slate-400 text-sm mb-6">{t.details.shareDesc} {anime.title}</p>
+                <p className="text-slate-400 text-sm mb-6">{t.details.shareDesc} {manga.title}</p>
                 
                 <div className="flex justify-center gap-6 mb-8">
                     <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group">
@@ -141,7 +141,7 @@ export const DonghuaDetail = () => {
                         </div>
                         <span className="text-xs text-slate-400 group-hover:text-white">Facebook</span>
                     </a>
-                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(anime.title)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group">
+                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(manga.title)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group">
                         <div className="w-12 h-12 rounded-full bg-[#1DA1F2]/10 flex items-center justify-center text-[#1DA1F2] group-hover:bg-[#1DA1F2] group-hover:text-white transition-all">
                             <Twitter className="w-6 h-6 fill-current" />
                         </div>
@@ -169,7 +169,7 @@ export const DonghuaDetail = () => {
       <div className="relative w-full h-[65vh] overflow-hidden">
         <img 
            src={posterUrl} 
-           alt={anime.title} 
+           alt={manga.title} 
            loading="lazy"
            className="w-full h-full object-cover blur-md opacity-40 scale-110"
         />
@@ -181,12 +181,13 @@ export const DonghuaDetail = () => {
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Poster Column */}
           <div className="flex-shrink-0 w-full max-w-[320px] mx-auto lg:mx-0 space-y-6 animate-fade-in-up">
-             <div className="relative group rounded-2xl overflow-hidden shadow-2xl shadow-violet-900/30 border border-white/10 bg-slate-800">
+             <div className="relative group rounded-2xl overflow-hidden shadow-2xl shadow-rose-900/30 border border-white/10 bg-slate-800">
                <img 
                  src={posterUrl} 
-                 alt={anime.title} 
+                 alt={manga.title} 
                  loading="lazy"
-                 className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+                 onLoad={() => setIsPosterLoaded(true)}
+                 className={`w-full h-auto object-cover transition-all duration-700 group-hover:scale-105 ${isPosterLoaded ? 'blur-0' : 'blur-xl opacity-70'}`}
                />
                
                {inWatchlist && (
@@ -196,10 +197,10 @@ export const DonghuaDetail = () => {
                )}
              </div>
              
-             {anime.episode_list && anime.episode_list.length > 0 && (
-                <Link to={`/donghua/watch/${anime.episode_list[anime.episode_list.length - 1].id}`} className="block">
-                  <Button className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(124,58,237,0.4)] animate-pulse-glow">
-                     <Play className="fill-white w-5 h-5 mr-2" /> {t.details.startWatching}
+             {manga.episode_list && manga.episode_list.length > 0 && (
+                <Link to={`/manga/read/${manga.episode_list[manga.episode_list.length - 1].id}`} className="block">
+                  <Button className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(225,29,72,0.4)] animate-pulse-glow bg-gradient-to-r from-rose-600 to-pink-600">
+                     <BookOpen className="fill-white w-5 h-5 mr-2" /> {t.manga.readNow}
                   </Button>
                 </Link>
              )}
@@ -230,18 +231,17 @@ export const DonghuaDetail = () => {
           {/* Details Column */}
           <div className="flex-1 pt-10 lg:pt-32 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-2 text-glow">
-                {anime.english_title || anime.title}
+                {manga.english_title || manga.title}
              </h1>
              <p className="text-slate-400 text-lg mb-8 font-bold tracking-wide">
-                {anime.japanese_title || anime.title}
+                {manga.japanese_title || manga.title}
              </p>
 
              <div className="flex flex-wrap gap-4 mb-8">
-                {anime.score && <Badge variant="hot" className="text-sm px-3 py-1"><Star className="w-3 h-3 mr-1 fill-white"/> {anime.score}</Badge>}
-                <Badge className="text-sm px-3 py-1"><Calendar className="w-3 h-3 mr-1"/> {anime.release_date || 'Unknown'}</Badge>
-                <Badge className="text-sm px-3 py-1"><Clock className="w-3 h-3 mr-1"/> {anime.duration || 'N/A'}</Badge>
-                <Badge className="text-sm px-3 py-1 bg-violet-500/20 text-violet-200 border-violet-500/30">{anime.type}</Badge>
-                <Badge className="text-sm px-3 py-1 bg-green-500/20 text-green-200 border-green-500/30">{anime.status}</Badge>
+                {manga.score && <Badge variant="hot" className="text-sm px-3 py-1"><Star className="w-3 h-3 mr-1 fill-white"/> {manga.score}</Badge>}
+                <Badge className="text-sm px-3 py-1"><Calendar className="w-3 h-3 mr-1"/> {manga.release_date || 'Unknown'}</Badge>
+                <Badge className="text-sm px-3 py-1 bg-rose-500/20 text-rose-200 border-rose-500/30">{manga.type}</Badge>
+                <Badge className="text-sm px-3 py-1 bg-green-500/20 text-green-200 border-green-500/30">{manga.status}</Badge>
              </div>
 
              <div className="space-y-8">
@@ -259,7 +259,7 @@ export const DonghuaDetail = () => {
                     
                     <div className={`px-6 text-slate-300 leading-relaxed text-lg transition-all duration-500 ease-in-out ${isExpanded ? 'opacity-100 max-h-[1000px] pb-8' : 'opacity-0 max-h-0 pb-0 overflow-hidden'}`}>
                        <div className="pt-2 border-t border-white/5">
-                          <p>{anime.synopsis}</p>
+                          <p>{manga.synopsis}</p>
                        </div>
                     </div>
                 </div>
@@ -267,20 +267,19 @@ export const DonghuaDetail = () => {
                 <div>
                    <h3 className="text-lg font-bold mb-3 text-slate-300">{t.details.genres}</h3>
                    <div className="flex flex-wrap gap-2">
-                      {anime.genres?.map((g) => (
-                         <Link key={g} to={`/donghua/browse?genre=${g.toLowerCase()}`}>
-                           <Badge variant="outline" className="px-4 py-2 hover:bg-violet-600 hover:border-violet-600 cursor-pointer transition-colors text-sm">{g}</Badge>
+                      {manga.genres?.map((g) => (
+                         <Link key={g} to={`/manga/browse?genre=${g.toLowerCase()}`}>
+                           <Badge variant="outline" className="px-4 py-2 hover:bg-rose-600 hover:border-rose-600 cursor-pointer transition-colors text-sm">{g}</Badge>
                          </Link>
                       ))}
                    </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-8 border-t border-white/5">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-6 py-8 border-t border-white/5">
                    {[
-                     { label: t.details.studio, value: anime.studio },
-                     { label: t.details.producers, value: anime.producer },
-                     { label: t.details.totalEpisodes, value: anime.total_episodes },
-                     { label: t.details.duration, value: anime.duration }
+                     { label: "Author", value: manga.studio }, // Mapped from author
+                     { label: "Posted By", value: manga.producer },
+                     { label: "Release", value: manga.release_date },
                    ].map((item, idx) => (
                      <div key={idx}>
                         <span className="block text-slate-500 text-xs uppercase tracking-wider font-bold mb-1">{item.label}</span>
@@ -291,15 +290,16 @@ export const DonghuaDetail = () => {
 
                 <div className="pt-8">
                    <div className="flex items-center justify-between mb-8">
-                      <h3 className="text-2xl font-bold">{t.details.episodes}</h3>
-                      <div className="text-sm text-slate-400">{anime.episode_list?.length} {t.details.available}</div>
+                      <h3 className="text-2xl font-bold">{t.manga.chapters}</h3>
+                      <div className="text-sm text-slate-400">{manga.episode_list?.length} {t.details.available}</div>
                    </div>
                    
-                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
-                      {anime.episode_list?.map((ep) => (
-                         <Link key={ep.id} to={`/donghua/watch/${ep.id}`}>
-                            <div className="bg-slate-800/50 hover:bg-violet-600 hover:shadow-lg hover:shadow-violet-600/30 border border-white/5 hover:border-violet-500 transition-all p-4 rounded-xl group text-center">
-                               <div className="font-bold text-white text-sm truncate">{ep.title}</div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar scroll-mask-y">
+                      {manga.episode_list?.map((ch) => (
+                         <Link key={ch.id} to={`/manga/read/${ch.id}`}>
+                            <div className="bg-slate-800/50 hover:bg-rose-600 hover:shadow-lg hover:shadow-rose-600/30 border border-white/5 hover:border-rose-500 transition-all p-4 rounded-xl group flex justify-between items-center">
+                               <div className="font-bold text-white text-sm truncate">{ch.title}</div>
+                               <span className="text-[10px] text-slate-400 group-hover:text-rose-200">{ch.date}</span>
                             </div>
                          </Link>
                       ))}

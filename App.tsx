@@ -24,6 +24,12 @@ import { DonghuaWatch } from './pages/DonghuaWatch';
 import { DonghuaBrowse } from './pages/DonghuaBrowse';
 import { DonghuaSchedule } from './pages/DonghuaSchedule';
 
+// Manga Pages
+import { MangaHome } from './pages/MangaHome';
+import { MangaBrowse } from './pages/MangaBrowse';
+import { MangaDetail } from './pages/MangaDetail';
+import { MangaRead } from './pages/MangaRead';
+
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   React.useEffect(() => {
@@ -61,6 +67,13 @@ const App: React.FC = () => {
             <Route path="/donghua/browse" element={<DonghuaBrowse />} />
             <Route path="/donghua/schedule" element={<DonghuaSchedule />} />
             <Route path="/donghua/genres" element={<GenreList type="donghua" />} />
+
+            {/* Manga Routes */}
+            <Route path="/manga" element={<MangaHome />} />
+            <Route path="/manga/browse" element={<MangaBrowse />} />
+            <Route path="/manga/detail/:id" element={<MangaDetail />} />
+            <Route path="/manga/read/:slug" element={<MangaRead />} />
+            <Route path="/manga/genres" element={<MangaBrowse />} /> {/* Redirect to browse with genre logic handles inside */}
 
             {/* Shared Routes */}
             <Route path="/watchlist" element={<Watchlist />} />

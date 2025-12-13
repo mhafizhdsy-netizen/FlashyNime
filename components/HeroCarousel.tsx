@@ -4,16 +4,17 @@ import { Link } from 'react-router-dom';
 import { Play, Info, Star, Calendar, Clock, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Anime } from '../types';
 import { Button, Badge } from './ui';
-import { getAnimeDetail } from '../services/api';
+import { getAnimeDetail, getMangaDetail } from '../services/api';
 import { useAppStore } from '../store/store';
 import { translations } from '../utils/translations';
 
 interface HeroCarouselProps {
   featured: Anime[];
   isDonghua?: boolean;
+  isManga?: boolean;
 }
 
-export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua = false }) => {
+export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua = false, isManga = false }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [rating, setRating] = useState<string>('N/A');
@@ -37,18 +38,18 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
     let isMounted = true;
 
     if (anime) {
-        // Use existing rating if available, otherwise fetch it
         if (anime.rating && anime.rating !== 'N/A') {
             setRating(anime.rating);
         } else {
             setRating('N/A');
-            // Fetch detailed info to get score
             const fetchScore = async () => {
                 if (!anime.id) return;
                 try {
-                    const res = await getAnimeDetail(anime.id);
-                    if (isMounted && res?.detail?.score) {
-                        setRating(res.detail.score);
+                    const detailFetcher = isManga ? getMangaDetail : getAnimeDetail;
+                    const res = await detailFetcher(anime.id);
+                    const score = res?.detail?.score || res?.detail?.rating; // Manga uses 'rating'
+                    if (isMounted && score) {
+                        setRating(score);
                     }
                 } catch (e) {
                     // Suppress errors for background fetch to avoid console spam
@@ -59,7 +60,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
     }
     
     return () => { isMounted = false; };
-  }, [currentIndex, featured]);
+  }, [currentIndex, featured, isManga]);
 
   useEffect(() => {
     resetTimeout();
@@ -103,6 +104,10 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
   if (!featured.length) return <div className="aspect-video w-full bg-slate-900 animate-pulse" />;
 
   const currentAnime = featured[currentIndex];
+  const rawPoster = currentAnime.poster;
+  const posterUrl = Array.isArray(rawPoster) && rawPoster.length > 0 ? rawPoster[0] : typeof rawPoster === 'string' ? rawPoster : '';
+
+  const linkPath = isManga ? '/manga/detail' : (isDonghua ? '/donghua/detail' : '/anime');
 
   return (
     <div className="relative w-full aspect-video overflow-hidden bg-[#020617] group select-none shadow-2xl">
@@ -110,7 +115,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
       <div className="absolute inset-0 transition-all duration-700 ease-in-out">
          <div key={currentAnime.id} className="absolute inset-0 animate-fade-in">
             <img 
-                src={currentAnime.poster} 
+                src={posterUrl} 
                 alt={currentAnime.title} 
                 className="w-full h-full object-cover object-top opacity-60 scale-105 group-hover:scale-100 transition-transform duration-[10s] ease-linear" 
                 draggable="false"
@@ -170,7 +175,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
                    </div>
                    <div className="flex items-center gap-1">
                        <Clock className="w-3 h-3 md:w-4 md:h-4 text-slate-500"/>
-                       <span>{currentAnime.episode ? `${currentAnime.episode} Eps` : 'Ongoing'}</span>
+                       <span>{currentAnime.episode ? `${isManga ? 'Ch' : 'Ep'} ${currentAnime.episode}` : 'Ongoing'}</span>
                    </div>
                    <Badge variant="outline" className="text-[10px] md:text-xs border-slate-600 text-slate-300 px-1.5 md:px-2">HD</Badge>
                 </div>
@@ -186,12 +191,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
              </div>
 
              <div className="flex items-center gap-3 md:gap-4 animate-fade-in-up pointer-events-auto pt-2 md:pt-0" style={{ animationDelay: '100ms' }}>
-                <Link to={`${isDonghua ? '/donghua/detail' : '/anime'}/${currentAnime.id}`}>
+                <Link to={`${linkPath}/${currentAnime.id}`}>
                   <Button className="h-9 md:h-14 px-5 md:px-10 text-xs md:text-lg rounded-xl md:rounded-2xl gap-2 md:gap-3 shadow-[0_0_20px_rgba(124,58,237,0.3)] md:shadow-[0_0_40px_rgba(124,58,237,0.5)] border border-violet-500/50">
-                    <Play className="fill-white w-3.5 h-3.5 md:w-5 md:h-5" /> {t.home.watchNow}
+                    <Play className="fill-white w-3.5 h-3.5 md:w-5 md:h-5" /> {isManga ? t.manga.readNow : t.home.watchNow}
                   </Button>
                 </Link>
-                <Link to={`${isDonghua ? '/donghua/detail' : '/anime'}/${currentAnime.id}`}>
+                <Link to={`${linkPath}/${currentAnime.id}`}>
                    <Button variant="glass" className="h-9 md:h-14 px-5 md:px-8 text-xs md:text-lg rounded-xl md:rounded-2xl gap-2 md:gap-3 hover:bg-white/10">
                       <Info className="w-3.5 h-3.5 md:w-5 md:h-5" /> {t.home.details}
                    </Button>
@@ -214,6 +219,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide mask-image-gradient-right">
                     {featured.map((anime, idx) => {
                         const isActive = idx === currentIndex;
+                        const thumbPoster = Array.isArray(anime.poster) && anime.poster.length > 0 ? anime.poster[0] : typeof anime.poster === 'string' ? anime.poster : '';
                         return (
                             <div 
                                 key={idx}
@@ -224,7 +230,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ featured, isDonghua 
                                 `}
                             >
                                 <img 
-                                  src={anime.poster} 
+                                  src={thumbPoster} 
                                   alt={anime.title} 
                                   loading="lazy"
                                   className="w-full h-full object-cover" 

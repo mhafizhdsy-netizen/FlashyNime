@@ -404,7 +404,7 @@ export const Browse = () => {
                    </div>
 
                    {/* Modal Body - Scrollable */}
-                   <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-[#0f172a]">
+                   <div className="p-6 overflow-y-auto custom-scrollbar scroll-mask-y flex-1 bg-[#0f172a]">
                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                            {genres.map(g => {
                                const isSelected = selectedGenres.includes(g.id);

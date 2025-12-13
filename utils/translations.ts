@@ -1,3 +1,4 @@
+
 export const translations = {
   en: {
     nav: {
@@ -13,6 +14,7 @@ export const translations = {
       watchlist: "Watchlist",
       random: "Random",
       about: "About",
+      manga: "Manga"
     },
     home: {
       popular: "Popular Now",
@@ -90,7 +92,8 @@ export const translations = {
       noResults: "No results found for",
       type: {
         anime: "Anime",
-        donghua: "Donghua"
+        donghua: "Donghua",
+        manga: "Manga"
       }
     },
     schedule: {
@@ -130,9 +133,22 @@ export const translations = {
       selectYear: "Select a different year to view other archives.",
       year: "Year"
     },
+    manga: {
+      library: "Manga Library",
+      explore: "Explore Comics & Manhwa.",
+      trending: "Trending Now",
+      latest: "Latest Updates",
+      projects: "Project Updates",
+      readNow: "Read Now",
+      chapters: "Chapters",
+      reader: "Reader",
+      prevChapter: "Prev Chapter",
+      nextChapter: "Next Chapter"
+    },
     genres: {
       animeTitle: "Anime Genres",
       donghuaTitle: "Donghua Genres",
+      mangaTitle: "Manga Genres",
       subtitle: "Browse our extensive collection by category."
     },
     footer: {
@@ -155,6 +171,7 @@ export const translations = {
       watchlist: "Daftar Tonton",
       random: "Acak",
       about: "Tentang",
+      manga: "Manga"
     },
     home: {
       popular: "Populer Saat Ini",
@@ -232,7 +249,8 @@ export const translations = {
       noResults: "Tidak ada hasil untuk",
       type: {
         anime: "Anime",
-        donghua: "Donghua"
+        donghua: "Donghua",
+        manga: "Manga"
       }
     },
     schedule: {
@@ -272,9 +290,22 @@ export const translations = {
       selectYear: "Pilih tahun berbeda untuk melihat arsip lain.",
       year: "Tahun"
     },
+    manga: {
+      library: "Pustaka Manga",
+      explore: "Jelajahi Komik & Manhwa.",
+      trending: "Sedang Tren",
+      latest: "Rilis Terbaru",
+      projects: "Pembaruan Proyek",
+      readNow: "Baca Sekarang",
+      chapters: "Chapter",
+      reader: "Pembaca",
+      prevChapter: "Chapter Sblm",
+      nextChapter: "Chapter Lnjt"
+    },
     genres: {
       animeTitle: "Genre Anime",
       donghuaTitle: "Genre Donghua",
+      mangaTitle: "Genre Manga",
       subtitle: "Jelajahi koleksi lengkap kami berdasarkan kategori."
     },
     footer: {

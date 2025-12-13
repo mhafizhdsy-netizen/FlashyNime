@@ -1,17 +1,19 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Star, Tv, Film, Layers, ImageOff } from 'lucide-react';
 import { Anime } from '../types';
-import { getAnimeDetail, getDonghuaDetail, normalizeAnime, normalizeDonghua } from '../services/api';
+import { getAnimeDetail, getDonghuaDetail, getMangaDetail, normalizeAnime, normalizeDonghua, normalizeManga } from '../services/api';
 
 interface AnimeCardProps {
   anime: Anime;
   isDonghua?: boolean;
   isBatch?: boolean;
+  isManga?: boolean;
   overrideLink?: string;
 }
 
-export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, isDonghua = false, isBatch = false, overrideLink }) => {
+export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, isDonghua = false, isBatch = false, isManga = false, overrideLink }) => {
   const [enrichedAnime, setEnrichedAnime] = useState<Anime>(anime);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -22,7 +24,8 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, isDonghua = false, 
 
   // Lazy load missing details (poster, status, type)
   useEffect(() => {
-    const isContentDonghua = displayAnime.isDonghua !== undefined ? displayAnime.isDonghua : isDonghua;
+    const isContentDonghua = anime.isDonghua || isDonghua;
+    const isContentManga = anime.isManga || isManga;
     const hasMissingInfo = !displayAnime.poster || !displayAnime.status || !displayAnime.type;
 
     if (!hasMissingInfo || observerFired.current) return;
@@ -34,8 +37,19 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, isDonghua = false, 
           observerFired.current = true;
 
           if (displayAnime.id) {
-            const detailFetcher = isContentDonghua ? getDonghuaDetail : getAnimeDetail;
-            const normalizer = isContentDonghua ? normalizeDonghua : normalizeAnime;
+            let detailFetcher: any;
+            let normalizer: any;
+
+            if (isContentManga) {
+              detailFetcher = getMangaDetail;
+              normalizer = normalizeManga;
+            } else if (isContentDonghua) {
+              detailFetcher = getDonghuaDetail;
+              normalizer = normalizeDonghua;
+            } else {
+              detailFetcher = getAnimeDetail;
+              normalizer = normalizeAnime;
+            }
 
             detailFetcher(displayAnime.id)
               .then(res => {
@@ -72,20 +86,30 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, isDonghua = false, 
     return () => {
       observer.disconnect();
     };
-  }, [displayAnime, isDonghua]);
+  }, [displayAnime, isDonghua, isManga]);
 
 
-  const isContentDonghua = displayAnime.isDonghua !== undefined ? displayAnime.isDonghua : isDonghua;
+  const isContentDonghua = anime.isDonghua || isDonghua;
+  const isContentManga = anime.isManga || isManga;
 
   let linkPrefix = '/anime';
-  if (isContentDonghua) linkPrefix = '/donghua/detail';
-  if (isBatch) linkPrefix = '/batch';
+  if (isContentManga) {
+    linkPrefix = '/manga/detail';
+  } else if (isContentDonghua) {
+    linkPrefix = '/donghua/detail';
+  }
+  
+  if (isBatch) {
+    linkPrefix = '/batch';
+  }
 
   const displayTitle = (displayAnime as any).english_title || displayAnime.title;
   const animeId = displayAnime.id || ''; 
   
   const finalLink = overrideLink ? overrideLink : `${linkPrefix}/${animeId}`;
-  const posterUrl = displayAnime.poster;
+  const rawPoster = displayAnime.poster;
+  const posterUrl = Array.isArray(rawPoster) && rawPoster.length > 0 ? rawPoster[0] : typeof rawPoster === 'string' ? rawPoster : '';
+
   const hasPoster = posterUrl && posterUrl.trim() !== '';
 
   return (
@@ -142,7 +166,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, isDonghua = false, 
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-20">
             {displayAnime.episode && !isBatch && (
                 <span className="px-2 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-bold text-white border border-white/10 shadow-lg">
-                    Ep {displayAnime.episode}
+                    {isContentManga ? 'Ch' : 'Ep'} {displayAnime.episode}
                 </span>
             )}
             {isBatch && (

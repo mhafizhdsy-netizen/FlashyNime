@@ -44,7 +44,7 @@ export const Schedule = () => {
     }
   }, [activeDay, loading]);
 
-  const currentList = schedule.find(s => s.day.toLowerCase() === activeDay.toLowerCase())?.anime_list || [];
+  const currentList = schedule.find(s => s.day.toLowerCase() === activeDay.toLowerCase())?.animeList || [];
 
   return (
     <div className="min-h-screen bg-[#020617] pt-28 px-6 pb-20">

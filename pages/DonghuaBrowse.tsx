@@ -281,7 +281,7 @@ export const DonghuaBrowse = () => {
                         {isYearDropdownOpen && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setIsYearDropdownOpen(false)}/>
-                                <div className="absolute right-0 top-full mt-2 w-[180px] bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-2 z-20 animate-scale-in origin-top-right max-h-60 overflow-y-auto custom-scrollbar">
+                                <div className="absolute right-0 top-full mt-2 w-[180px] bg-[#0f172a] border border-white/10 rounded-2xl shadow-2xl p-2 z-20 animate-scale-in origin-top-right max-h-60 overflow-y-auto custom-scrollbar scroll-mask-y">
                                     <h4 className="text-xs font-bold text-slate-500 uppercase mb-2 pl-2 pt-2">Select Year</h4>
                                     <div className="space-y-1">
                                         {years.map(y => (
