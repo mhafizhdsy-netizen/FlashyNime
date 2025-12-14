@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -21,6 +20,7 @@ export const Schedule = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   useEffect(() => {
+    // API uses English days (e.g., "Friday"), so we default to English locale for today
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
     setActiveDay(today);
     
@@ -44,7 +44,9 @@ export const Schedule = () => {
     }
   }, [activeDay, loading]);
 
-  const currentList = schedule.find(s => s.day.toLowerCase() === activeDay.toLowerCase())?.animeList || [];
+  // Robust comparison: Normalize strings to ensure "Friday " matches "Friday" case-insensitively
+  const normalizeDay = (d: string) => d.toLowerCase().trim();
+  const currentList = schedule.find(s => normalizeDay(s.day) === normalizeDay(activeDay))?.animeList || [];
 
   return (
     <div className="min-h-screen bg-[#020617] pt-28 px-6 pb-20">
@@ -93,7 +95,8 @@ export const Schedule = () => {
          ) : (
              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
                 {currentList.map((anime, idx) => (
-                   <AnimeCard key={idx} anime={anime} />
+                   // Use anime.id as key to ensure fresh render, fall back to unique string if ID missing
+                   <AnimeCard key={anime.id || `${activeDay}-${idx}`} anime={anime} />
                 ))}
                 {currentList.length === 0 && (
                    <div className="col-span-full text-center py-20 text-slate-500 bg-white/5 rounded-3xl border border-white/5">

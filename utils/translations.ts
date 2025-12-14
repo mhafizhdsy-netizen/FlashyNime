@@ -11,7 +11,7 @@ export const translations = {
       season: "Season",
       searchPlaceholder: "Search library...",
       history: "History",
-      watchlist: "Watchlist",
+      watchlist: "Bookmark",
       random: "Random",
       about: "About",
       manga: "Manga"
@@ -42,16 +42,17 @@ export const translations = {
       episodes: "Episodes",
       available: "Episodes Available",
       startWatching: "Start Watching",
-      saveToList: "Save to List",
-      saved: "Saved",
+      saveToList: "Bookmark",
+      saved: "Bookmarked",
       share: "Share",
       shareTitle: "Share to",
       shareDesc: "Spread the word about",
       copy: "Copy",
+      copied: "Copied!",
       readMore: "Read More",
       readLess: "Read Less",
-      successAdded: "Added to Watchlist",
-      successRemoved: "Removed from Watchlist"
+      successAdded: "Added to Bookmarks",
+      successRemoved: "Removed from Bookmarks"
     },
     watch: {
       episodeNotFound: "Episode not found",
@@ -110,10 +111,10 @@ export const translations = {
       emptyDesc: "Go watch some anime!"
     },
     watchlist: {
-      title: "My Watchlist",
-      subtitle: "shows saved",
-      emptyTitle: "Your list is empty",
-      emptyDesc: "Start adding anime to track what you want to watch."
+      title: "My Bookmarks",
+      subtitle: "shows bookmarked",
+      emptyTitle: "Your bookmarks are empty",
+      emptyDesc: "Start bookmarking anime to track what you want to watch."
     },
     batch: {
       title: "Anime Batches",
@@ -136,14 +137,14 @@ export const translations = {
     manga: {
       library: "Manga Library",
       explore: "Explore Comics & Manhwa.",
-      trending: "Trending Now",
-      latest: "Latest Updates",
-      projects: "Project Updates",
-      readNow: "Read Now",
-      chapters: "Chapters",
-      reader: "Reader",
-      prevChapter: "Prev Chapter",
-      nextChapter: "Next Chapter"
+      trending: "Sedang Tren",
+      latest: "Rilis Terbaru",
+      projects: "Pembaruan Proyek",
+      readNow: "Baca Sekarang",
+      chapters: "Chapter",
+      reader: "Pembaca",
+      prevChapter: "Chapter Sblm",
+      nextChapter: "Chapter Lnjt"
     },
     genres: {
       animeTitle: "Anime Genres",
@@ -168,7 +169,7 @@ export const translations = {
       season: "Musim",
       searchPlaceholder: "Cari anime...",
       history: "Riwayat",
-      watchlist: "Daftar Tonton",
+      watchlist: "Bookmark",
       random: "Acak",
       about: "Tentang",
       manga: "Manga"
@@ -199,16 +200,17 @@ export const translations = {
       episodes: "Episode",
       available: "Episode Tersedia",
       startWatching: "Mulai Menonton",
-      saveToList: "Simpan ke Daftar",
-      saved: "Disimpan",
+      saveToList: "Bookmark",
+      saved: "Bookmarked",
       share: "Bagikan",
       shareTitle: "Bagikan ke",
       shareDesc: "Sebarkan berita tentang",
       copy: "Salin",
+      copied: "Disalin!",
       readMore: "Baca Selengkapnya",
       readLess: "Baca Lebih Sedikit",
-      successAdded: "Ditambahkan ke Daftar Tonton",
-      successRemoved: "Dihapus dari Daftar Tonton"
+      successAdded: "Ditambahkan ke Bookmark",
+      successRemoved: "Dihapus dari Bookmark"
     },
     watch: {
       episodeNotFound: "Episode tidak ditemukan",
@@ -267,9 +269,9 @@ export const translations = {
       emptyDesc: "Ayo tonton beberapa anime!"
     },
     watchlist: {
-      title: "Daftar Tonton Saya",
-      subtitle: "tayangan disimpan",
-      emptyTitle: "Daftar Anda kosong",
+      title: "Bookmark Saya",
+      subtitle: "tayangan dibookmark",
+      emptyTitle: "Bookmark Anda kosong",
       emptyDesc: "Mulai tambahkan anime untuk melacak apa yang ingin Anda tonton."
     },
     batch: {

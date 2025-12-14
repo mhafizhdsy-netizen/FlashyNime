@@ -1,15 +1,287 @@
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Zap, Code, Database, Shield, Globe } from 'lucide-react';
-import { Button } from '../components/ui';
+import { ArrowLeft, Zap, Code, Database, Shield, Globe, Play, Check, AlertCircle, Copy, Terminal, ChevronDown } from 'lucide-react';
+import { Button, Spinner, Badge } from '../components/ui';
+
+// Proxy configuration duplicated from api.ts for standalone playground functionality
+const BASE_URL = 'https://www.sankavollerei.com';
+const getProxyUrls = (targetUrl: string) => [
+  `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(targetUrl)}`,
+  `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+  `https://thingproxy.freeboard.io/fetch/${targetUrl}`,
+  `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+  targetUrl
+];
+
+type ParamType = { name: string; placeholder: string; required?: boolean; default?: string; type?: 'path' | 'query' };
+type EndpointConfig = { name: string; path: string; method: string; desc: string; params: ParamType[] };
+
+const apiConfig: Record<string, EndpointConfig[]> = {
+  anime: [
+    { name: 'Home', path: '/anime/samehadaku/home', method: 'GET', desc: 'Get aggregated home data.', params: [] },
+    { name: 'Ongoing', path: '/anime/samehadaku/ongoing', method: 'GET', desc: 'Get currently airing anime.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'query' }] },
+    { name: 'Completed', path: '/anime/samehadaku/completed', method: 'GET', desc: 'Get completed anime.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'query' }] },
+    { name: 'Movies', path: '/anime/samehadaku/movies', method: 'GET', desc: 'Get anime movies.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'query' }] },
+    { name: 'Popular', path: '/anime/samehadaku/popular', method: 'GET', desc: 'Get popular anime.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'query' }] },
+    { name: 'Recent Episodes', path: '/anime/samehadaku/recent', method: 'GET', desc: 'Get recently released episodes.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'query' }] },
+    { name: 'Schedule', path: '/anime/samehadaku/schedule', method: 'GET', desc: 'Get weekly schedule.', params: [] },
+    { name: 'Genres', path: '/anime/samehadaku/genres', method: 'GET', desc: 'Get all genres.', params: [] },
+    { name: 'Search', path: '/anime/samehadaku/search', method: 'GET', desc: 'Search anime.', params: [{ name: 'q', placeholder: 'naruto', required: true, type: 'query' }] },
+    { name: 'Detail', path: '/anime/samehadaku/anime/{id}', method: 'GET', desc: 'Get anime details.', params: [{ name: 'id', placeholder: 'slug-id', required: true, type: 'path' }] },
+    { name: 'Episode', path: '/anime/samehadaku/episode/{id}', method: 'GET', desc: 'Get episode stream links.', params: [{ name: 'id', placeholder: 'slug-episode-1', required: true, type: 'path' }] },
+    { name: 'Batch List', path: '/anime/samehadaku/batch', method: 'GET', desc: 'Get list of batches.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'query' }] },
+    { name: 'Batch Detail', path: '/anime/samehadaku/batch/{id}', method: 'GET', desc: 'Get batch downloads.', params: [{ name: 'id', placeholder: 'slug-batch', required: true, type: 'path' }] },
+  ],
+  donghua: [
+    { name: 'Home', path: '/anime/donghua/home/{page}', method: 'GET', desc: 'Get donghua home data.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'path' }] },
+    { name: 'Ongoing', path: '/anime/donghua/ongoing/{page}', method: 'GET', desc: 'Get ongoing donghua.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'path' }] },
+    { name: 'Latest', path: '/anime/donghua/latest/{page}', method: 'GET', desc: 'Get latest episodes.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'path' }] },
+    { name: 'Detail', path: '/anime/donghua/detail/{id}', method: 'GET', desc: 'Get donghua detail.', params: [{ name: 'id', placeholder: 'slug', required: true, type: 'path' }] },
+    { name: 'Search', path: '/anime/donghua/search/{query}', method: 'GET', desc: 'Search donghua.', params: [{ name: 'query', placeholder: 'soul land', required: true, type: 'path' }] },
+    { name: 'Episode', path: '/anime/donghua/episode/{id}', method: 'GET', desc: 'Get episode details.', params: [{ name: 'id', placeholder: 'episode-slug', required: true, type: 'path' }] },
+  ],
+  manga: [
+    { name: 'Home', path: '/comic/mangakita/home', method: 'GET', desc: 'Get manga home.', params: [] },
+    { name: 'List', path: '/comic/mangakita/list', method: 'GET', desc: 'Get manga list.', params: [{ name: 'page', placeholder: '1', default: '1', type: 'query' }, { name: 'order', placeholder: 'popular', default: 'popular', type: 'query' }] },
+    { name: 'Search', path: '/comic/mangakita/search/{query}/{page}', method: 'GET', desc: 'Search manga.', params: [{ name: 'query', placeholder: 'one piece', required: true, type: 'path' }, { name: 'page', placeholder: '1', default: '1', type: 'path' }] },
+    { name: 'Detail', path: '/comic/mangakita/detail/{slug}', method: 'GET', desc: 'Get manga info.', params: [{ name: 'slug', placeholder: 'manga-slug', required: true, type: 'path' }] },
+    { name: 'Chapter', path: '/comic/mangakita/chapter/{slug}', method: 'GET', desc: 'Get chapter images.', params: [{ name: 'slug', placeholder: 'chapter-slug', required: true, type: 'path' }] },
+  ]
+};
+
+const ApiPlayground = () => {
+  const [category, setCategory] = useState<string>('anime');
+  const [selectedEndpointIndex, setSelectedEndpointIndex] = useState<number>(0);
+  const [paramValues, setParamValues] = useState<Record<string, string>>({});
+  const [response, setResponse] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<number | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const activeEndpoints = apiConfig[category];
+  const endpoint = activeEndpoints[selectedEndpointIndex];
+
+  const handleCategoryChange = (cat: string) => {
+    setCategory(cat);
+    setSelectedEndpointIndex(0);
+    setParamValues({});
+    setResponse(null);
+    setStatus(null);
+  };
+
+  const handleEndpointChange = (idx: number) => {
+    setSelectedEndpointIndex(idx);
+    setParamValues({});
+    setResponse(null);
+    setStatus(null);
+  };
+
+  const executeRequest = async () => {
+    setLoading(true);
+    setResponse(null);
+    setStatus(null);
+    const startTime = Date.now();
+
+    try {
+      let finalPath = endpoint.path;
+      const queryParams = new URLSearchParams();
+
+      endpoint.params.forEach(p => {
+        const val = paramValues[p.name] || p.default || '';
+        if (p.type === 'path') {
+          finalPath = finalPath.replace(`{${p.name}}`, encodeURIComponent(val));
+        } else {
+          if (val) queryParams.append(p.name, val);
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const fullPath = queryString ? `${finalPath}?${queryString}` : finalPath;
+      const targetUrl = `${BASE_URL}${fullPath}`;
+      
+      // Use proxy rotation logic
+      const urlsToTry = getProxyUrls(targetUrl);
+      let success = false;
+      let lastJson = null;
+
+      for (const url of urlsToTry) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          
+          const res = await fetch(url, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (res.ok) {
+            const text = await res.text();
+            let json = JSON.parse(text);
+            if (json.contents) json = JSON.parse(json.contents); // Handle AllOrigins
+            
+            lastJson = json;
+            setStatus(res.status);
+            success = true;
+            break;
+          }
+        } catch (e) {
+          console.warn(`Proxy failed: ${url}`);
+        }
+      }
+
+      if (success && lastJson) {
+        setResponse(lastJson);
+      } else {
+        setStatus(500);
+        setResponse({ error: "All proxies failed to fetch data." });
+      }
+
+    } catch (err: any) {
+      setStatus(500);
+      setResponse({ error: err.message });
+    } finally {
+      setDuration(Date.now() - startTime);
+      setLoading(false);
+    }
+  };
+
+  const copyResponse = () => {
+    if (response) {
+      navigator.clipboard.writeText(JSON.stringify(response, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <div className="space-y-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+       <div className="flex items-center gap-4 mb-4">
+          <div className="p-3 bg-fuchsia-500/10 rounded-xl border border-fuchsia-500/20">
+             <Terminal className="w-6 h-6 text-fuchsia-400" />
+          </div>
+          <h2 className="text-3xl font-bold text-white">API Playground</h2>
+       </div>
+
+       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Controls Panel */}
+          <div className="lg:col-span-5 bg-slate-900/80 rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+             {/* Category Tabs */}
+             <div className="flex border-b border-white/5 bg-slate-950/50">
+                {Object.keys(apiConfig).map(cat => (
+                   <button
+                     key={cat}
+                     onClick={() => handleCategoryChange(cat)}
+                     className={`flex-1 py-4 text-sm font-bold uppercase tracking-wider transition-colors ${category === cat ? 'text-violet-400 bg-white/5 border-b-2 border-violet-500' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+                   >
+                     {cat}
+                   </button>
+                ))}
+             </div>
+
+             <div className="p-6 space-y-6">
+                {/* Endpoint Select */}
+                <div className="space-y-2">
+                   <label className="text-xs font-bold text-slate-400 uppercase">Endpoint</label>
+                   <div className="relative">
+                      <select 
+                        value={selectedEndpointIndex}
+                        onChange={(e) => handleEndpointChange(Number(e.target.value))}
+                        className="w-full bg-slate-800 border border-white/10 text-white text-sm rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      >
+                         {activeEndpoints.map((ep, idx) => (
+                            <option key={idx} value={idx}>{ep.method} - {ep.name}</option>
+                         ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"/>
+                   </div>
+                   <p className="text-xs text-slate-500 mt-2">{endpoint.desc}</p>
+                   <div className="flex items-center gap-2 mt-2 font-mono text-xs bg-black/30 p-2 rounded-lg border border-white/5 text-emerald-400">
+                      <span className="font-bold text-violet-400">{endpoint.method}</span>
+                      {endpoint.path}
+                   </div>
+                </div>
+
+                {/* Parameters */}
+                {endpoint.params.length > 0 && (
+                   <div className="space-y-3">
+                      <label className="text-xs font-bold text-slate-400 uppercase">Parameters</label>
+                      {endpoint.params.map(param => (
+                         <div key={param.name} className="flex flex-col gap-1">
+                            <div className="flex justify-between text-xs">
+                               <span className="font-mono text-slate-300">{param.name}</span>
+                               <span className={`text-[10px] uppercase ${param.required ? 'text-red-400' : 'text-slate-600'}`}>{param.required ? 'Required' : 'Optional'}</span>
+                            </div>
+                            <input 
+                               type="text"
+                               placeholder={param.placeholder}
+                               value={paramValues[param.name] || ''}
+                               onChange={(e) => setParamValues({...paramValues, [param.name]: e.target.value})}
+                               className="bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500 transition-colors"
+                            />
+                         </div>
+                      ))}
+                   </div>
+                )}
+
+                <Button onClick={executeRequest} disabled={loading} className="w-full gap-2">
+                   {loading ? <Spinner /> : <Play className="w-4 h-4 fill-white" />}
+                   Send Request
+                </Button>
+             </div>
+          </div>
+
+          {/* Response Panel */}
+          <div className="lg:col-span-7 h-full min-h-[500px] flex flex-col bg-[#0b1221] rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+             <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-slate-950/50">
+                <span className="text-sm font-bold text-slate-400">Response</span>
+                <div className="flex items-center gap-3">
+                   {status && (
+                      <Badge variant={status === 200 ? 'outline' : 'hot'} className={status === 200 ? 'text-emerald-400 border-emerald-500/30' : ''}>
+                         {status} {status === 200 ? 'OK' : 'Error'}
+                      </Badge>
+                   )}
+                   {duration && (
+                      <span className="text-xs text-slate-500 font-mono">{duration}ms</span>
+                   )}
+                   <button onClick={copyResponse} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white" title="Copy JSON">
+                      {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                   </button>
+                </div>
+             </div>
+             
+             <div className="flex-1 relative overflow-hidden">
+                {response ? (
+                   <pre className="absolute inset-0 p-6 overflow-auto custom-scrollbar text-xs font-mono leading-relaxed text-blue-100 selection:bg-violet-500/30">
+                      {JSON.stringify(response, null, 2)}
+                   </pre>
+                ) : (
+                   <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-600 p-6 text-center">
+                      {loading ? (
+                         <div className="flex flex-col items-center gap-4">
+                            <Spinner />
+                            <span className="text-sm animate-pulse">Fetching data from the void...</span>
+                         </div>
+                      ) : (
+                         <>
+                            <Code className="w-12 h-12 mb-4 opacity-20" />
+                            <p className="text-sm max-w-xs">Select an endpoint and parameters, then hit Send Request to see the magic happen.</p>
+                         </>
+                      )}
+                   </div>
+                )}
+             </div>
+          </div>
+       </div>
+    </div>
+  );
+};
 
 export const About = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#020617] pt-28 px-6 pb-20">
-      <div className="container mx-auto max-w-4xl">
+      <div className="container mx-auto max-w-6xl">
         {/* Back Button */}
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-8 pl-0 hover:pl-2 transition-all text-slate-400 hover:text-white">
             <ArrowLeft className="w-5 h-5 mr-2"/> Back
@@ -44,508 +316,8 @@ export const About = () => {
            </div>
         </div>
 
-        {/* API Documentation Section */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-           <div className="flex items-center gap-4 mb-8">
-              <div className="p-3 bg-fuchsia-500/10 rounded-xl border border-fuchsia-500/20">
-                 <Code className="w-6 h-6 text-fuchsia-400" />
-              </div>
-              <h2 className="text-3xl font-bold text-white">API Documentation</h2>
-           </div>
-
-           <div className="space-y-12">
-              <div className="prose prose-invert max-w-none text-slate-300">
-                 <p>
-                    FlashyNime uses a custom scraping API that interfaces with <strong>Samehadaku</strong>, <strong>Donghua sources</strong>, and others. 
-                    Developers can use the following endpoints to access our data.
-                 </p>
-                 <div className="bg-slate-950 rounded-xl p-4 border border-white/10 font-mono text-sm text-slate-400 mb-6">
-                    Base URL: <span className="text-violet-400">https://www.sankavollerei.com</span>
-                 </div>
-              </div>
-
-              {/* Anime Section */}
-              <div className="space-y-4">
-                 <h3 className="text-2xl font-bold text-white mb-4 pl-2 border-l-4 border-violet-500">Anime Endpoints (Samehadaku)</h3>
-
-                 {/* Home */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/home</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Fetches the aggregated home page data including recent releases, popular anime, movies, and completed series.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (HomeData)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Ongoing */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/ongoing?page={'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get a list of currently airing anime sorted by popularity.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (AnimeList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Completed */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/completed?page={'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get a list of completed anime series sorted by latest update.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (AnimeList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Movies */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/movies?page={'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get a list of anime movies.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (AnimeList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Popular */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/popular?page={'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get the most popular anime of the season.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (AnimeList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Recent */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/recent?page={'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get the latest released episodes.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (AnimeList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Schedule */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/schedule</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get the full weekly release schedule.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (ScheduleDay[])
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Genres */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/genres</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get the list of all available genres.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (GenreList)
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/genres/{'{id}'}?page={'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get anime list by specific genre ID.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (AnimeList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Search */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/search</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Search for anime by title. Query parameter: <code className="bg-slate-800 px-1 rounded">?q=query</code></p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (SearchResults)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Detail */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/anime/{'{id}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Retrieves detailed information about a specific anime, including synopsis, genres, and episode list.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (AnimeDetail)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Episode */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/episode/{'{id}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Fetches streaming links, server embeds, and download options for a specific episode.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (EpisodeDetail)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Server */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/server/{'{serverId}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get the real embed URL for a specific video server.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (ServerData)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Batches */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/batch?page={'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get a list of available anime batches (full season downloads).</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (BatchList)
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/samehadaku/batch/{'{id}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get detailed information and download links for a specific batch.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (BatchDetail)
-                       </div>
-                    </div>
-                 </div>
-              </div>
-
-              {/* Donghua Section */}
-              <div className="space-y-4">
-                 <h3 className="text-2xl font-bold text-white mb-4 pl-2 border-l-4 border-fuchsia-500">Donghua Endpoints</h3>
-
-                 {/* Home */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/home/{'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Fetches the donghua home page data including latest releases and completed donghua.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (DonghuaHome)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Ongoing */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/ongoing/{'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get a list of currently airing donghua.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (DonghuaList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Completed */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/completed/{'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get a list of completed donghua series.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (DonghuaList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Latest */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/latest/{'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get the most recently updated donghua episodes.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (DonghuaList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Schedule */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/schedule</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get the weekly release schedule for donghua.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (ScheduleDay[])
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Search */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/search/{'{query}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Search for donghua by title.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (SearchResults)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Detail */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/detail/{'{id}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Retrieves detailed information about a specific donghua.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (DonghuaDetail)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Episode */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/episode/{'{id}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Fetches streaming links and download options for a specific donghua episode.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (DonghuaEpisode)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Genres */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/genres</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get the list of all available donghua genres.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (GenreList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* By Genre */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/genres/{'{id}'}/{'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get donghua list by specific genre ID.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (DonghuaList)
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Seasons */}
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/anime/donghua/seasons/{'{year}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get donghua series released in a specific year.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (DonghuaList)
-                       </div>
-                    </div>
-                 </div>
-              </div>
-
-              {/* Manga Section */}
-              <div className="space-y-4">
-                 <h3 className="text-2xl font-bold text-white mb-4 pl-2 border-l-4 border-rose-500">Manga Endpoints (Mangakita)</h3>
-                 
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/comic/mangakita/home</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Fetches trending and latest manga releases.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (MangaHome)
-                       </div>
-                    </div>
-                 </div>
-                 
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/comic/mangakita/list?order={'{order}'}&page={'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get a paginated list of manga, sortable by criteria like 'popular' or 'update'.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (MangaList)
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/comic/mangakita/projects/{'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get a list of manga project updates.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (MangaList)
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/comic/mangakita/genres</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get the list of all available manga genres.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (GenreList)
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/comic/mangakita/genres/{'{slug}'}/{'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Get manga list by a specific genre slug.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Array (MangaList)
-                       </div>
-                    </div>
-                 </div>
-                 
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/comic/mangakita/search/{'{query}'}/{'{page}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Search for manga by title.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (SearchResults)
-                       </div>
-                    </div>
-                 </div>
-                 
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/comic/mangakita/detail/{'{slug}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Retrieves detailed information for a specific manga, including chapter list.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (MangaDetail)
-                       </div>
-                    </div>
-                 </div>
-                 
-                 <div className="bg-slate-900/80 rounded-2xl border border-white/5 overflow-hidden">
-                    <div className="bg-slate-800/50 px-6 py-4 border-b border-white/5 flex items-center gap-3">
-                       <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs font-bold rounded">GET</span>
-                       <code className="text-sm font-bold text-white">/comic/mangakita/chapter/{'{slug}'}</code>
-                    </div>
-                    <div className="p-6">
-                       <p className="text-slate-400 text-sm mb-4">Fetches all image URLs for a specific manga chapter.</p>
-                       <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <Database className="w-3 h-3" /> Returns: JSON Object (MangaReaderData)
-                       </div>
-                    </div>
-                 </div>
-              </div>
-           </div>
-        </div>
+        {/* Replaced static docs with Playground */}
+        <ApiPlayground />
       </div>
     </div>
   );

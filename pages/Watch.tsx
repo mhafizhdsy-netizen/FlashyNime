@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Download, MessageSquare, AlertCircle, Server, FileDown, ExternalLink, Settings, Play, X, Clock, ArrowLeft } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, MessageSquare, AlertCircle, Server, FileDown, ExternalLink, Settings, Play, X, Clock, ArrowLeft, ChevronDown } from 'lucide-react';
 import { getEpisodeDetail, getServerEmbed, getAnimeDetail, getBatchDetail, normalizeAnime } from '../services/api';
 import { EpisodeDetail, VideoServer, BatchDetail } from '../types';
 import { Button, Badge, Spinner } from '../components/ui';
@@ -16,6 +16,11 @@ export const Watch = () => {
   const [loading, setLoading] = useState(true);
   const [serverLoading, setServerLoading] = useState(false);
   const [autoPlay, setAutoPlay] = useState<boolean>(true);
+  
+  // Collapsible State
+  const [isServersExpanded, setIsServersExpanded] = useState(false);
+  const [isDownloadsExpanded, setIsDownloadsExpanded] = useState(false);
+  const [isBatchExpanded, setIsBatchExpanded] = useState(false);
   
   // Auto-play Logic State
   const [durationMs, setDurationMs] = useState<number>(24 * 60 * 1000); // Default 24 mins
@@ -219,7 +224,8 @@ export const Watch = () => {
     <div className="min-h-screen bg-[#020617] text-white pb-20">
       
       {/* Floating Back Button */}
-      <div className="absolute top-24 left-4 z-40 md:left-8">
+      {/* Reduced z-index to avoid covering navigation menu (typically z-50 or z-40 mobile menu) */}
+      <div className="absolute top-24 left-4 z-30 md:left-8">
         <Button 
             variant="glass" 
             onClick={() => navigate(-1)} 
@@ -329,85 +335,111 @@ export const Watch = () => {
                  </p>
               </div>
 
-              {/* Server List */}
+              {/* Server List - Collapsible */}
               {episode.servers && episode.servers.length > 0 && (
-                <div className="glass-panel p-6 rounded-2xl">
-                   <h3 className="font-bold mb-4 flex items-center gap-2 text-violet-300">
-                      <Server className="w-5 h-5" /> {t.watch.switchServer}
-                   </h3>
-                   <div className="space-y-4">
-                      {episode.servers.map((quality, idx) => (
-                        <div key={idx}>
-                          <h4 className="text-xs text-slate-500 uppercase font-bold mb-2">{quality.title}</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {quality.serverList.map((srv, sIdx) => (
-                              <Badge 
-                                key={sIdx} 
-                                onClick={() => handleServerClick(srv)}
-                                className="cursor-pointer hover:bg-violet-600 transition-colors bg-slate-800 border-white/10 px-3 py-2"
-                              >
-                                {srv.title}
-                              </Badge>
+                <div className="glass-panel rounded-2xl overflow-hidden transition-all duration-300">
+                    <button 
+                        onClick={() => setIsServersExpanded(!isServersExpanded)}
+                        className="w-full flex items-center justify-between p-6 text-left hover:bg-white/5 transition-colors"
+                    >
+                         <h3 className="font-bold flex items-center gap-2 text-violet-300">
+                            <Server className="w-5 h-5" /> {t.watch.switchServer}
+                        </h3>
+                        <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isServersExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <div className={`transition-all duration-300 ease-in-out ${isServersExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="px-6 pb-6 space-y-4 pt-2 border-t border-white/5">
+                            {episode.servers.map((quality, idx) => (
+                                <div key={idx}>
+                                    <h4 className="text-xs text-slate-500 uppercase font-bold mb-2">{quality.title}</h4>
+                                    <div className="flex flex-wrap gap-2">
+                                        {quality.serverList.map((srv, sIdx) => (
+                                        <Badge 
+                                            key={sIdx} 
+                                            onClick={() => handleServerClick(srv)}
+                                            className="cursor-pointer hover:bg-violet-600 transition-colors bg-slate-800 border-white/10 px-3 py-2"
+                                        >
+                                            {srv.title}
+                                        </Badge>
+                                        ))}
+                                    </div>
+                                </div>
                             ))}
-                          </div>
                         </div>
-                      ))}
-                   </div>
+                    </div>
                 </div>
               )}
 
-              {/* Episode Download Section */}
+              {/* Episode Download Section - Collapsible */}
               {episode.download_links && episode.download_links.length > 0 && (
-                <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 p-6 rounded-2xl border border-cyan-500/20">
-                   <h3 className="font-bold mb-6 flex items-center gap-2 text-cyan-300 text-lg">
-                      <Download className="w-5 h-5" /> {t.watch.download}
-                   </h3>
-                   <div className="grid gap-4">
-                      {episode.download_links.map((quality, idx) => (
-                        <div key={idx} className="bg-black/30 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row sm:items-center gap-4">
-                           <div className="min-w-[120px]">
-                              <span className="text-lg font-black text-cyan-500 block leading-tight">{quality.quality}</span>
-                           </div>
-                           <div className="flex flex-wrap gap-2 flex-1">
-                              {quality.links.map((link, lIdx) => (
-                                <a key={lIdx} href={link.link} target="_blank" rel="noopener noreferrer">
-                                   <Badge className="bg-cyan-950 text-cyan-300 border-cyan-800 hover:bg-cyan-600 hover:text-white cursor-pointer py-2 px-3">
-                                      {link.title} <ExternalLink className="w-3 h-3 ml-1 opacity-50"/>
-                                   </Badge>
-                                </a>
-                              ))}
-                           </div>
-                        </div>
-                      ))}
+                <div className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 rounded-2xl border border-cyan-500/20 overflow-hidden transition-all duration-300">
+                   <button 
+                        onClick={() => setIsDownloadsExpanded(!isDownloadsExpanded)}
+                        className="w-full flex items-center justify-between p-6 text-left hover:bg-cyan-500/10 transition-colors"
+                   >
+                        <h3 className="font-bold flex items-center gap-2 text-cyan-300 text-lg">
+                            <Download className="w-5 h-5" /> {t.watch.download}
+                        </h3>
+                        <ChevronDown className={`w-5 h-5 text-cyan-400 transition-transform duration-300 ${isDownloadsExpanded ? 'rotate-180' : ''}`} />
+                   </button>
+                   
+                   <div className={`transition-all duration-300 ease-in-out ${isDownloadsExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                       <div className="px-6 pb-6 grid gap-4 border-t border-cyan-500/20 pt-4">
+                            {episode.download_links.map((quality, idx) => (
+                                <div key={idx} className="bg-black/30 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row sm:items-center gap-4">
+                                    <div className="min-w-[120px]">
+                                        <span className="text-lg font-black text-cyan-500 block leading-tight">{quality.quality}</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 flex-1">
+                                        {quality.links.map((link, lIdx) => (
+                                            <a key={lIdx} href={link.link} target="_blank" rel="noopener noreferrer">
+                                            <Badge className="bg-cyan-950 text-cyan-300 border-cyan-800 hover:bg-cyan-600 hover:text-white cursor-pointer py-2 px-3">
+                                                {link.title} <ExternalLink className="w-3 h-3 ml-1 opacity-50"/>
+                                            </Badge>
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                       </div>
                    </div>
                 </div>
               )}
            </div>
 
            <div className="lg:col-span-1 space-y-6">
-              {/* Batch Download Section */}
+              {/* Batch Download Section - Collapsible */}
               {batch && batch.download_links && batch.download_links.length > 0 && (
-                  <div className="bg-gradient-to-br from-fuchsia-900/20 to-purple-900/20 p-6 rounded-2xl border border-fuchsia-500/20 shadow-lg shadow-fuchsia-900/10">
-                     <h3 className="font-bold mb-2 flex items-center gap-2 text-fuchsia-300 text-lg">
-                        <FileDown className="w-5 h-5" /> {t.watch.batchDownload}
-                     </h3>
-                     <p className="text-sm text-slate-400 mb-6">{t.watch.batchDesc}</p>
+                  <div className="bg-gradient-to-br from-fuchsia-900/20 to-purple-900/20 rounded-2xl border border-fuchsia-500/20 shadow-lg shadow-fuchsia-900/10 overflow-hidden transition-all duration-300">
+                     <button
+                        onClick={() => setIsBatchExpanded(!isBatchExpanded)}
+                        className="w-full flex items-center justify-between p-6 text-left hover:bg-fuchsia-500/10 transition-colors"
+                     >
+                        <h3 className="font-bold flex items-center gap-2 text-fuchsia-300 text-lg">
+                            <FileDown className="w-5 h-5" /> {t.watch.batchDownload}
+                        </h3>
+                        <ChevronDown className={`w-5 h-5 text-fuchsia-400 transition-transform duration-300 ${isBatchExpanded ? 'rotate-180' : ''}`} />
+                     </button>
                      
-                     <div className="space-y-4">
-                        {batch.download_links.map((quality, idx) => (
-                            <div key={idx} className="space-y-2">
-                                <span className="text-xs font-bold text-fuchsia-200/70 block uppercase tracking-wider">{quality.quality}</span>
-                                <div className="flex flex-wrap gap-2">
-                                    {quality.links.map((link, lIdx) => (
-                                        <a key={lIdx} href={link.link} target="_blank" rel="noopener noreferrer">
-                                            <Badge className="bg-fuchsia-950 text-fuchsia-300 border-fuchsia-800 hover:bg-fuchsia-600 hover:text-white cursor-pointer transition-colors">
-                                                {link.title}
-                                            </Badge>
-                                        </a>
-                                    ))}
+                     <div className={`transition-all duration-300 ease-in-out ${isBatchExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="px-6 pb-6 space-y-4 border-t border-fuchsia-500/20 pt-4">
+                            <p className="text-sm text-slate-400 mb-2">{t.watch.batchDesc}</p>
+                            {batch.download_links.map((quality, idx) => (
+                                <div key={idx} className="space-y-2">
+                                    <span className="text-xs font-bold text-fuchsia-200/70 block uppercase tracking-wider">{quality.quality}</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {quality.links.map((link, lIdx) => (
+                                            <a key={lIdx} href={link.link} target="_blank" rel="noopener noreferrer">
+                                                <Badge className="bg-fuchsia-950 text-fuchsia-300 border-fuchsia-800 hover:bg-fuchsia-600 hover:text-white cursor-pointer transition-colors">
+                                                    {link.title}
+                                                </Badge>
+                                            </a>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                      </div>
                   </div>
               )}

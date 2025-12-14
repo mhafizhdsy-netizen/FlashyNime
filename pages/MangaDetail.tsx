@@ -1,10 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Calendar, Clock, Star, Bookmark, Share2, Check, Copy, X, Facebook, Twitter, RefreshCw, Trash2, ArrowLeft, ChevronDown, Play } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Star, Bookmark, Share2, Check, RefreshCw, Trash2, ArrowLeft, ChevronDown, Play } from 'lucide-react';
 import { getMangaDetail, normalizeManga } from '../services/api';
 import { AnimeDetail as AnimeDetailType } from '../types';
 import { Button, Badge, Skeleton } from '../components/ui';
+import { ShareModal } from '../components/ShareModal';
 import { useAppStore } from '../store/store';
 import { translations } from '../utils/translations';
 
@@ -73,10 +74,6 @@ export const MangaDetail = () => {
     setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(shareUrl);
-  };
-
   if (loading) return (
     <div className="min-h-screen bg-[#020617] pt-32 px-6 container mx-auto">
        <div className="flex flex-col md:flex-row gap-12">
@@ -128,46 +125,12 @@ export const MangaDetail = () => {
       </div>
 
       {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4">
-            <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl w-full max-w-md relative animate-scale-in shadow-2xl">
-                <button onClick={() => setShowShareModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
-                    <X className="w-5 h-5" />
-                </button>
-                
-                <h3 className="text-xl font-bold text-white mb-2">{t.details.shareTitle}</h3>
-                <p className="text-slate-400 text-sm mb-6">{t.details.shareDesc} {manga.title}</p>
-                
-                <div className="flex justify-center gap-6 mb-8">
-                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group">
-                        <div className="w-12 h-12 rounded-full bg-[#1877F2]/10 flex items-center justify-center text-[#1877F2] group-hover:bg-[#1877F2] group-hover:text-white transition-all">
-                            <Facebook className="w-6 h-6 fill-current" />
-                        </div>
-                        <span className="text-xs text-slate-400 group-hover:text-white">Facebook</span>
-                    </a>
-                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(manga.title)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group">
-                        <div className="w-12 h-12 rounded-full bg-[#1DA1F2]/10 flex items-center justify-center text-[#1DA1F2] group-hover:bg-[#1DA1F2] group-hover:text-white transition-all">
-                            <Twitter className="w-6 h-6 fill-current" />
-                        </div>
-                        <span className="text-xs text-slate-400 group-hover:text-white">Twitter</span>
-                    </a>
-                    <a href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 group">
-                        <div className="w-12 h-12 rounded-full bg-[#25D366]/10 flex items-center justify-center text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-all">
-                            <Share2 className="w-6 h-6" />
-                        </div>
-                        <span className="text-xs text-slate-400 group-hover:text-white">WhatsApp</span>
-                    </a>
-                </div>
-
-                <div className="bg-black/50 p-1.5 rounded-xl border border-white/5 flex items-center gap-2 pl-4">
-                    <span className="text-slate-400 text-sm truncate flex-1 font-mono">{shareUrl}</span>
-                    <Button onClick={handleCopy} className="h-9 px-4 min-w-[90px]">
-                        <Copy className="w-3 h-3 mr-2" /> {t.details.copy}
-                    </Button>
-                </div>
-            </div>
-        </div>
-      )}
+      <ShareModal 
+        isOpen={showShareModal} 
+        onClose={() => setShowShareModal(false)} 
+        title={manga.title} 
+        url={shareUrl} 
+      />
 
       {/* Immersive Parallax Header */}
       <div className="relative w-full h-[65vh] overflow-hidden">

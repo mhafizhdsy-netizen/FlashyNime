@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
@@ -42,7 +41,9 @@ export const DonghuaSchedule = () => {
     }
   }, [activeDay, loading]);
 
-  const currentList = schedule.find(s => s.day.toLowerCase() === activeDay.toLowerCase())?.animeList || [];
+  // Robust comparison: Normalize strings to ensure "Friday " matches "Friday"
+  const normalizeDay = (d: string) => d.toLowerCase().trim();
+  const currentList = schedule.find(s => normalizeDay(s.day) === normalizeDay(activeDay))?.animeList || [];
 
   return (
     <div className="min-h-screen bg-[#020617] pt-28 px-6 pb-20">
@@ -89,7 +90,7 @@ export const DonghuaSchedule = () => {
          ) : (
              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
                 {currentList.map((anime, idx) => (
-                   <AnimeCard key={idx} anime={anime} isDonghua={true} />
+                   <AnimeCard key={`${anime.id}-${idx}`} anime={anime} isDonghua={true} />
                 ))}
                 {currentList.length === 0 && (
                    <div className="col-span-full text-center py-20 text-slate-500 bg-white/5 rounded-3xl border border-white/5">

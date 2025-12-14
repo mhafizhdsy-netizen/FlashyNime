@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Star, Tv, Film, Layers, ImageOff } from 'lucide-react';
@@ -19,6 +18,14 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, isDonghua = false, 
   const [hasError, setHasError] = useState(false);
   const cardRef = useRef<HTMLAnchorElement>(null);
   const observerFired = useRef(false);
+
+  // Sync state with props when anime changes to handle parent list updates
+  useEffect(() => {
+    setEnrichedAnime(anime);
+    setHasError(false);
+    setIsLoaded(false);
+    observerFired.current = false;
+  }, [anime]);
 
   const displayAnime = enrichedAnime;
 
@@ -86,7 +93,7 @@ export const AnimeCard: React.FC<AnimeCardProps> = ({ anime, isDonghua = false, 
     return () => {
       observer.disconnect();
     };
-  }, [displayAnime, isDonghua, isManga]);
+  }, [displayAnime, isDonghua, isManga, anime]);
 
 
   const isContentDonghua = anime.isDonghua || isDonghua;
