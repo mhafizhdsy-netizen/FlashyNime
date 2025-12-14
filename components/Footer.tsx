@@ -45,13 +45,13 @@ export const Footer = () => {
               {t.footer.desc}
             </p>
             <div className="flex gap-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-violet-600 hover:text-white transition-all border border-white/5 hover:border-violet-500">
+              <a href="https://github.com/mhafizhdsy-netizen/FlashyNime" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-violet-600 hover:text-white transition-all border border-white/5 hover:border-violet-500">
                 <Github className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-violet-600 hover:text-white transition-all border border-white/5 hover:border-violet-500">
+              <a href="https://tiktok.com/@surrebrec.id" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-violet-600 hover:text-white transition-all border border-white/5 hover:border-violet-500">
                 <TikTokIcon className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-violet-600 hover:text-white transition-all border border-white/5 hover:border-violet-500">
+              <a href="https://www.instagram.com/elchampionee?igsh=MmVpbjNmdmNmaTJt" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:bg-violet-600 hover:text-white transition-all border border-white/5 hover:border-violet-500">
                 <Instagram className="w-5 h-5" />
               </a>
             </div>

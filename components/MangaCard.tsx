@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Star, ImageOff } from 'lucide-react';
+import { BookOpen, Star, ImageOff, History } from 'lucide-react';
 import { Anime } from '../types';
 import { getMangaDetail, normalizeManga } from '../services/api';
 import { Spinner } from './ui';
+import { useAppStore } from '../store/store';
 
 interface MangaCardProps {
   manga: Anime;
@@ -18,8 +19,11 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manga, overrideLink }) => 
   const [isInView, setIsInView] = useState(false);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const cardRef = useRef<HTMLAnchorElement>(null);
+  
+  const { getLastWatched } = useAppStore();
 
   const displayManga = enrichedManga;
+  const lastReadId = displayManga.id ? getLastWatched(displayManga.id) : null;
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -85,6 +89,18 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manga, overrideLink }) => 
 
   const hasPoster = posterUrl && posterUrl.trim() !== '';
 
+  // Extract chapter number from slug if possible
+  const getChapterNum = (slug: string) => {
+      const match = slug.match(/chapter[\s-]*(\d+(\.\d+)?)/i);
+      if (match) return match[1];
+      // Fallback: match any trailing number
+      const trailing = slug.match(/(\d+(\.\d+)?)$/);
+      if (trailing) return trailing[1];
+      return '';
+  };
+
+  const lastReadNum = lastReadId ? getChapterNum(lastReadId) : null;
+
   return (
     <Link to={finalLink} ref={cardRef} className="block group w-full h-full relative">
       <div className="relative w-full aspect-[2/3] rounded-2xl overflow-hidden bg-slate-800 transition-all duration-500 group-hover:shadow-[0_0_25px_rgba(225,29,72,0.4)] group-hover:scale-[1.02] ring-1 ring-white/10 group-hover:ring-rose-500/50">
@@ -143,6 +159,11 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manga, overrideLink }) => 
             {displayManga.episode && (
                 <span className="px-2 py-1 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-bold text-white border border-white/10 shadow-lg">
                     Ch {displayManga.episode}
+                </span>
+            )}
+            {lastReadNum && (
+                 <span className="px-2 py-1 rounded-md bg-emerald-600/90 backdrop-blur-md text-[10px] font-bold text-white border border-white/10 shadow-lg flex items-center gap-1 animate-fade-in">
+                    <History className="w-3 h-3" /> Read: {lastReadNum}
                 </span>
             )}
         </div>
