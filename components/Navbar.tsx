@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, Bookmark, Zap, Shuffle, Clock, ChevronDown, Languages, Info, Film, Tv, BookOpen } from 'lucide-react';
@@ -19,6 +18,7 @@ export const Navbar = () => {
   const [suggestions, setSuggestions] = useState<Anime[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const location = useLocation();
@@ -33,7 +33,11 @@ export const Navbar = () => {
     
     // Click outside to close search
     const handleClickOutside = (event: MouseEvent) => {
-        if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        const target = event.target as Node;
+        const isInsideDesktop = searchRef.current && searchRef.current.contains(target);
+        const isInsideMobile = mobileSearchRef.current && mobileSearchRef.current.contains(target);
+
+        if (!isInsideDesktop && !isInsideMobile) {
             if (window.innerWidth >= 768) { // Only on desktop
                 setIsSearchOpen(false);
             }
@@ -110,13 +114,10 @@ export const Navbar = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
       e.preventDefault();
       if (searchQuery.trim()) {
-          navigate(`/search?q=${encodeURIComponent(searchQuery)}`); // You might need to handle query param in Search page or just navigate
-          // Since existing Search page uses internal state, let's just go to /search and let user type again or 
-          // Better: pass state. For now, simple navigation to trigger fresh search context if needed.
-          // Actually, the current Search page doesn't read URL params for query. 
-          // So we just navigate to /search and close the dropdown. 
-          // Ideally, Search.tsx should read ?q= param.
-          navigate('/search'); 
+          navigate(`/search?q=${encodeURIComponent(searchQuery)}`); 
+          // If we navigate to /search, we should also probably set the query in the state of the search page or URL. 
+          // The current Search page uses local state, but we can pass query param support there later if needed.
+          // For now, this navigation triggers a mount of Search page.
           setIsSearchOpen(false);
           setSuggestions([]);
           setSearchQuery('');
@@ -168,7 +169,7 @@ export const Navbar = () => {
     }
   ];
 
-  const SearchDropdown = () => {
+  const renderSearchDropdown = () => {
       if (searchQuery.length > 2 && (suggestions.length > 0 || isSearching)) {
           return (
               <div className="absolute top-full left-0 right-0 mt-2 bg-[#0f172a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
@@ -336,7 +337,7 @@ export const Navbar = () => {
                       )}
                   </div>
                   {/* Dropdown Results */}
-                  <SearchDropdown />
+                  {renderSearchDropdown()}
               </div>
 
               {/* Discovery Actions */}
@@ -395,7 +396,7 @@ export const Navbar = () => {
          {/* Content */}
          <div className="flex-1 overflow-y-auto px-6 pt-24 pb-8 space-y-8 animate-fade-in-up">
              {/* Mobile Search */}
-             <div className="relative">
+             <div className="relative" ref={mobileSearchRef}>
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"/>
                 <input 
                    type="text" 
@@ -407,7 +408,7 @@ export const Navbar = () => {
                 />
                 {/* Mobile Dropdown */}
                 <div className="relative mt-2">
-                    <SearchDropdown />
+                    {renderSearchDropdown()}
                 </div>
              </div>
 

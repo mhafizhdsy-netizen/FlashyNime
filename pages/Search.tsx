@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search as SearchIcon, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { searchAnime, searchDonghua, searchManga, normalizeAnime } from '../services/api';
 import { Anime } from '../types';
 import { AnimeCard } from '../components/AnimeCard';
@@ -11,13 +10,25 @@ import { useAppStore } from '../store/store';
 import { translations } from '../utils/translations';
 
 export const Search = () => {
-  const [query, setQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get('q') || '';
+  
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<Anime[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'anime' | 'donghua' | 'manga'>('anime');
+  
   const navigate = useNavigate();
   const { language } = useAppStore();
   const t = translations[language];
+
+  // Sync state when URL parameters change (e.g. searching from Navbar while already on Search page)
+  useEffect(() => {
+    const urlQuery = searchParams.get('q');
+    if (urlQuery !== null && urlQuery !== query) {
+        setQuery(urlQuery);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -49,8 +60,9 @@ export const Search = () => {
 
   const handleTabChange = (tab: 'anime' | 'donghua' | 'manga') => {
     setActiveTab(tab);
-    setQuery('');
-    setResults([]);
+    // Do not clear query on tab change to allow searching same keyword in different category
+    // setQuery(''); 
+    // Just trigger re-search via effect
   };
 
   return (
@@ -76,7 +88,7 @@ export const Search = () => {
                placeholder={t.search.placeholder}
                value={query}
                onChange={(e) => setQuery(e.target.value)}
-               autoFocus
+               autoFocus={!initialQuery} // Only autofocus if we didn't arrive with a search term
              />
           </div>
 
