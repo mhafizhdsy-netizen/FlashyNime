@@ -23,7 +23,7 @@ export const DonghuaDetail = () => {
   const { addToWatchlist, removeFromWatchlist, language } = useAppStore();
   const t = translations[language];
 
-  const shareUrl = id ? `https://flashynime.vercel.app/#/donghua/detail/${id}` : '';
+  const shareUrl = id ? `https://flashynimeid.vercel.app/#/donghua/detail/${id}` : '';
 
   const fetchDetail = async () => {
     if (!id) return;

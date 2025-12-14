@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, Star, ImageOff } from 'lucide-react';
 import { Anime } from '../types';
 import { getMangaDetail, normalizeManga } from '../services/api';
+import { Spinner } from './ui';
 
 interface MangaCardProps {
   manga: Anime;
@@ -15,6 +16,7 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manga, overrideLink }) => 
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const cardRef = useRef<HTMLAnchorElement>(null);
 
   const displayManga = enrichedManga;
@@ -46,6 +48,7 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manga, overrideLink }) => 
 
     const hasMissingInfo = !displayManga.poster || !displayManga.status || !displayManga.type;
     if (hasMissingInfo && displayManga.id) {
+      setIsLoadingDetail(true);
       getMangaDetail(displayManga.id)
         .then(res => {
           if (res.detail) {
@@ -62,6 +65,9 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manga, overrideLink }) => 
         })
         .catch(() => {
           setHasError(true);
+        })
+        .finally(() => {
+          setIsLoadingDetail(false);
         });
     } else if (hasMissingInfo && !displayManga.id) {
       setHasError(true);
@@ -83,8 +89,15 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manga, overrideLink }) => 
     <Link to={finalLink} ref={cardRef} className="block group w-full h-full relative">
       <div className="relative w-full aspect-[2/3] rounded-2xl overflow-hidden bg-slate-800 transition-all duration-500 group-hover:shadow-[0_0_25px_rgba(225,29,72,0.4)] group-hover:scale-[1.02] ring-1 ring-white/10 group-hover:ring-rose-500/50">
         
+        {/* Loading State */}
+        {isLoadingDetail && (
+            <div className="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center z-20">
+                <Spinner />
+            </div>
+        )}
+
         {/* Fallback for error or missing image when in view */}
-        {isInView && (!hasPoster || hasError) && (
+        {!isLoadingDetail && isInView && (!hasPoster || hasError) && (
            <div className="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center p-4 text-center z-0">
               <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-2">
                  <ImageOff className="w-6 h-6 text-slate-600" />
@@ -96,14 +109,14 @@ export const MangaCard: React.FC<MangaCardProps> = ({ manga, overrideLink }) => 
         )}
 
         {/* Skeleton before view or before load */}
-        {(!isInView || !isLoaded) && !hasError && (
+        {(!isInView || !isLoaded) && !hasError && !isLoadingDetail && (
           <div className="absolute inset-0 bg-slate-800 z-0">
              <div className="w-full h-full animate-pulse bg-gradient-to-b from-slate-700/50 to-slate-800/50" />
           </div>
         )}
 
         {/* Image - rendered once in view */}
-        {isInView && hasPoster && !hasError && (
+        {!isLoadingDetail && isInView && hasPoster && !hasError && (
             <img 
             src={posterUrl} 
             alt={displayTitle}

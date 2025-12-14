@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Download, MessageSquare, AlertCircle, Server, FileDown, ExternalLink, Settings, Play, X, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, MessageSquare, AlertCircle, Server, FileDown, ExternalLink, Settings, Play, X, Clock, ArrowLeft } from 'lucide-react';
 import { getEpisodeDetail, getServerEmbed, getAnimeDetail, getBatchDetail, normalizeAnime } from '../services/api';
 import { EpisodeDetail, VideoServer, BatchDetail } from '../types';
 import { Button, Badge, Spinner } from '../components/ui';
@@ -217,8 +217,21 @@ export const Watch = () => {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white pb-20">
+      
+      {/* Floating Back Button */}
+      <div className="absolute top-24 left-4 z-40 md:left-8">
+        <Button 
+            variant="glass" 
+            onClick={() => navigate(-1)} 
+            className="rounded-full w-10 h-10 md:w-12 md:h-12 p-0 shadow-xl border-white/10 bg-black/50 hover:bg-black/70 backdrop-blur-md transition-transform hover:scale-110"
+            title={t.watch.goBack}
+        >
+           <ArrowLeft className="w-5 h-5 md:w-6 md:h-6 text-white" />
+        </Button>
+      </div>
+
       {/* Theater Mode Player */}
-      <div className="w-full bg-black pt-20 md:pt-24 pb-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-b border-white/5 relative group">
+      <div className="w-full bg-black pt-24 pb-8 shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-b border-white/5 relative group">
         <div className="container mx-auto max-w-7xl px-4 md:px-6">
            <div className="relative w-full aspect-video bg-[#0f172a] rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
               {serverLoading ? (
@@ -264,34 +277,40 @@ export const Watch = () => {
               )}
            </div>
            
-           <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4">
-              <div className="flex items-center gap-4 w-full md:w-auto">
-                <Button variant="secondary" onClick={() => navigate(-1)} className="gap-2">
-                    <ChevronLeft className="w-4 h-4"/> <span className="hidden sm:inline">{t.watch.details}</span>
-                </Button>
-                <div className="flex items-center gap-3 bg-slate-900/50 p-2 rounded-xl border border-white/5">
-                   <div className={`w-8 h-4 rounded-full p-0.5 cursor-pointer transition-colors ${autoPlay ? 'bg-violet-600' : 'bg-slate-700'}`} onClick={() => setAutoPlay(!autoPlay)}>
-                      <div className={`w-3 h-3 bg-white rounded-full shadow-md transform transition-transform ${autoPlay ? 'translate-x-4' : 'translate-x-0'}`} />
+           {/* Control Bar */}
+           <div className="flex flex-row justify-between items-center mt-6 gap-4">
+              
+              {/* Auto Play Toggle */}
+              <div className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-3 py-2 rounded-full border border-white/5 transition-all cursor-pointer group/autoplay" onClick={() => setAutoPlay(!autoPlay)}>
+                   <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-300 ${autoPlay ? 'bg-green-500' : 'bg-slate-600'}`}>
+                      <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-300 ${autoPlay ? 'translate-x-4' : 'translate-x-0'}`} />
                    </div>
-                   <span className="text-sm font-bold text-slate-300 select-none cursor-pointer" onClick={() => setAutoPlay(!autoPlay)}>{t.watch.autoPlay}</span>
-                </div>
+                   <span className="text-xs font-bold text-slate-400 group-hover/autoplay:text-white uppercase tracking-wider select-none hidden sm:inline">
+                        {t.watch.autoPlay}
+                   </span>
               </div>
 
-              <div className="flex gap-4">
+              {/* Navigation */}
+              <div className="flex items-center gap-3">
                  <Button 
                    variant="secondary" 
                    disabled={!episode.prev_episode}
                    onClick={() => navigate(`/watch/${episode.prev_episode}`)}
-                   className="w-12 h-12 p-0 rounded-full"
+                   className="rounded-full h-10 w-10 md:w-auto md:px-5 border-white/5 bg-white/5 hover:bg-white/10 p-0 md:gap-2"
+                   title="Previous Episode"
                  >
                     <ChevronLeft className="w-5 h-5" />
+                    <span className="hidden md:inline text-xs font-bold uppercase tracking-wider">Prev</span>
                  </Button>
+
                  <Button 
                    variant="primary" 
                    disabled={!episode.next_episode}
                    onClick={() => navigate(`/watch/${episode.next_episode}`)}
-                   className="w-12 h-12 p-0 rounded-full"
+                   className="rounded-full h-10 w-10 md:w-auto md:px-5 shadow-lg shadow-violet-600/20 bg-gradient-to-r from-violet-600 to-fuchsia-600 border-none p-0 md:gap-2 hover:scale-105"
+                   title="Next Episode"
                  >
+                    <span className="hidden md:inline text-xs font-bold uppercase tracking-wider">Next</span>
                     <ChevronRight className="w-5 h-5" />
                  </Button>
               </div>

@@ -29,7 +29,7 @@ export const Detail = () => {
   const lastWatchedEpisodeId = getLastWatched(currentId);
   const lastWatchedEpisode = anime?.episode_list?.find(ep => ep.id === lastWatchedEpisodeId);
 
-  const shareUrl = id ? `https://flashynime.vercel.app/#/${isDonghua ? 'donghua/detail' : 'anime'}/${id}` : '';
+  const shareUrl = id ? `https://flashynimeid.vercel.app/#/${isDonghua ? 'donghua/detail' : 'anime'}/${id}` : '';
 
   const fetchDetail = async () => {
     if (!id) return;

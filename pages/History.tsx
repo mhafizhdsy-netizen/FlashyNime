@@ -64,13 +64,22 @@ export const History = () => {
           ) : (
              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                 {history.map((anime) => {
-                   // Calculate the link to the *exact* episode ID stored in watchHistory
-                   // This ensures clicking the card resumes the video immediately
-                   const lastWatchedEpisodeId = watchHistory[anime.id];
+                   // Calculate the link to the *exact* episode/chapter ID stored in watchHistory
+                   // This ensures clicking the card resumes the content immediately
+                   const lastWatchedId = watchHistory[anime.id];
                    const isDonghua = anime.isDonghua;
-                   const resumeLink = lastWatchedEpisodeId 
-                      ? `/${isDonghua ? 'donghua/watch' : 'watch'}/${lastWatchedEpisodeId}` 
-                      : undefined;
+                   const isManga = anime.isManga;
+                   
+                   let resumeLink: string | undefined = undefined;
+                   if (lastWatchedId) {
+                       if (isManga) {
+                           resumeLink = `/manga/read/${lastWatchedId}`;
+                       } else if (isDonghua) {
+                           resumeLink = `/donghua/watch/${lastWatchedId}`;
+                       } else {
+                           resumeLink = `/watch/${lastWatchedId}`;
+                       }
+                   }
 
                    return (
                      <div key={anime.id} className="relative group">

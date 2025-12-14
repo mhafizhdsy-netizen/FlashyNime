@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
-import { getMangaChapter, getMangaDetail } from '../services/api';
+import { getMangaChapter, getMangaDetail, normalizeManga } from '../services/api';
 import { MangaReaderData, AnimeDetail } from '../types';
 import { Button, Spinner } from '../components/ui';
 import { useAppStore } from '../store/store';
@@ -16,7 +16,7 @@ export const MangaRead = () => {
   const [navSlugs, setNavSlugs] = useState<{ prev: string | null; next: string | null }>({ prev: null, next: null });
   const [loading, setLoading] = useState(true);
   
-  const { language } = useAppStore();
+  const { language, updateHistory, addToHistory } = useAppStore();
   const t = translations[language];
 
   useEffect(() => {
@@ -32,8 +32,23 @@ export const MangaRead = () => {
             if (chapterRes.data) {
                 setData(chapterRes.data);
                 
-                // Fetch the full manga detail to get the chapter list for navigation
+                // Fetch the full manga detail to get the chapter list for navigation and history metadata
                 const detailRes = await getMangaDetail(chapterRes.data.comicSlug);
+                
+                // Update History
+                if (detailRes.detail) {
+                    // 1. Save specific chapter pointer (Manga ID -> Chapter ID)
+                    updateHistory(chapterRes.data.comicSlug, slug);
+
+                    // 2. Add to global history list with metadata
+                    const mangaForHistory = {
+                        ...normalizeManga({ ...detailRes.detail, slug: chapterRes.data.comicSlug }),
+                        id: chapterRes.data.comicSlug,
+                        english_title: detailRes.detail.english_title
+                    };
+                    addToHistory(mangaForHistory, chapterRes.data.title); // e.g. "Chapter 123"
+                }
+
                 if (detailRes.detail && detailRes.detail.episode_list) {
                     const chapters = detailRes.detail.episode_list;
                     setChapterList(chapters);

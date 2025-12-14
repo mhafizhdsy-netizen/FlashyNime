@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { BookOpen, Calendar, Clock, Star, Bookmark, Share2, Check, Copy, X, Facebook, Twitter, RefreshCw, Trash2, ArrowLeft, ChevronDown } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Star, Bookmark, Share2, Check, Copy, X, Facebook, Twitter, RefreshCw, Trash2, ArrowLeft, ChevronDown, Play } from 'lucide-react';
 import { getMangaDetail, normalizeManga } from '../services/api';
 import { AnimeDetail as AnimeDetailType } from '../types';
 import { Button, Badge, Skeleton } from '../components/ui';
@@ -21,10 +21,14 @@ export const MangaDetail = () => {
   
   const currentId = manga?.id || id || '';
   const inWatchlist = useAppStore((state) => state.watchlist.some((a) => a.id === currentId));
-  const { addToWatchlist, removeFromWatchlist, language } = useAppStore();
+  const { addToWatchlist, removeFromWatchlist, getLastWatched, language } = useAppStore();
   const t = translations[language];
 
-  const shareUrl = id ? `https://flashynime.vercel.app/#/manga/detail/${id}` : '';
+  // Check history for "Continue Reading"
+  const lastReadChapterId = getLastWatched(currentId);
+  const lastReadChapter = manga?.episode_list?.find(ch => ch.id === lastReadChapterId);
+
+  const shareUrl = id ? `https://flashynimeid.vercel.app/#/manga/detail/${id}` : '';
 
   const fetchDetail = async () => {
     if (!id) return;
@@ -198,9 +202,18 @@ export const MangaDetail = () => {
              </div>
              
              {manga.episode_list && manga.episode_list.length > 0 && (
-                <Link to={`/manga/read/${manga.episode_list[manga.episode_list.length - 1].id}`} className="block">
+                <Link 
+                    to={lastReadChapterId 
+                        ? `/manga/read/${lastReadChapterId}` 
+                        : `/manga/read/${manga.episode_list[manga.episode_list.length - 1].id}`
+                    } 
+                    className="block"
+                >
                   <Button className="w-full h-14 text-lg rounded-xl shadow-[0_0_20px_rgba(225,29,72,0.4)] animate-pulse-glow bg-gradient-to-r from-rose-600 to-pink-600">
-                     <BookOpen className="fill-white w-5 h-5 mr-2" /> {t.manga.readNow}
+                     <BookOpen className="fill-white w-5 h-5 mr-2" /> 
+                     {lastReadChapterId && lastReadChapter 
+                        ? `Continue ${lastReadChapter.title}` 
+                        : t.manga.readNow}
                   </Button>
                 </Link>
              )}
@@ -297,9 +310,18 @@ export const MangaDetail = () => {
                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar scroll-mask-y">
                       {manga.episode_list?.map((ch) => (
                          <Link key={ch.id} to={`/manga/read/${ch.id}`}>
-                            <div className="bg-slate-800/50 hover:bg-rose-600 hover:shadow-lg hover:shadow-rose-600/30 border border-white/5 hover:border-rose-500 transition-all p-4 rounded-xl group flex justify-between items-center">
-                               <div className="font-bold text-white text-sm truncate">{ch.title}</div>
-                               <span className="text-[10px] text-slate-400 group-hover:text-rose-200">{ch.date}</span>
+                            <div className={`
+                                border transition-all p-4 rounded-xl group flex justify-between items-center
+                                ${lastReadChapterId === ch.id
+                                    ? 'bg-rose-600/20 border-rose-500 shadow-[0_0_15px_rgba(225,29,72,0.2)]'
+                                    : 'bg-slate-800/50 hover:bg-rose-600 hover:shadow-lg hover:shadow-rose-600/30 border-white/5 hover:border-rose-500'
+                                }
+                            `}>
+                               <div className="font-bold text-white text-sm truncate flex items-center gap-2">
+                                   {lastReadChapterId === ch.id && <Play className="w-3 h-3 fill-white" />}
+                                   {ch.title}
+                               </div>
+                               <span className={`text-[10px] ${lastReadChapterId === ch.id ? 'text-rose-200' : 'text-slate-400 group-hover:text-rose-200'}`}>{ch.date}</span>
                             </div>
                          </Link>
                       ))}

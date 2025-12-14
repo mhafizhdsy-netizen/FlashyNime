@@ -26,13 +26,13 @@ export const Footer = () => {
   const isManga = location.pathname.includes('/manga');
 
   return (
-    <footer className="bg-[#020617] border-t border-white/5 pt-20 pb-10 relative overflow-hidden">
+    <footer className="bg-[#020617] border-t border-white/5 pt-16 pb-10 relative overflow-hidden">
       {/* Decorative Glow */}
       <div className="absolute top-0 left-1/4 w-1/2 h-1 bg-gradient-to-r from-transparent via-violet-600 to-transparent opacity-50 blur-sm" />
       
       <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-8 mb-16">
-          <div className="col-span-1 md:col-span-3 space-y-6">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-y-10 gap-x-4 lg:gap-8 mb-16">
+          <div className="col-span-2 md:col-span-3 space-y-6">
             <Link to="/" className="flex items-center gap-2">
               <div className="bg-gradient-to-br from-violet-600 to-fuchsia-600 p-1.5 rounded-lg">
                 <Zap className="text-white w-5 h-5 fill-white" />
@@ -59,7 +59,7 @@ export const Footer = () => {
 
           <div className="col-span-1 md:col-span-2">
             <h4 className="text-white font-bold mb-6 flex items-center gap-2">Anime</h4>
-            <ul className="space-y-3 text-sm text-slate-400">
+            <ul className="space-y-2 text-sm text-slate-400">
               <li><Link to="/browse?status=ongoing" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.browse.filters.ongoing}</Link></li>
               <li><Link to="/browse?status=popular" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.browse.filters.popular}</Link></li>
               <li><Link to="/movies" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.movies}</Link></li>
@@ -71,27 +71,27 @@ export const Footer = () => {
 
           <div className="col-span-1 md:col-span-2">
             <h4 className="text-white font-bold mb-6 flex items-center gap-2">Donghua</h4>
-            <ul className="space-y-3 text-sm text-slate-400">
-              <li><Link to="/donghua" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.home}</Link></li>
-              <li><Link to="/donghua/browse" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.browse}</Link></li>
-              <li><Link to="/donghua/browse?status=seasons" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.season}</Link></li>
-              <li><Link to="/donghua/genres" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.genres.donghuaTitle}</Link></li>
-              <li><Link to="/donghua/schedule" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.schedule}</Link></li>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li><Link to="/donghua" className="hover:text-fuchsia-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-fuchsia-500"/> {t.nav.home}</Link></li>
+              <li><Link to="/donghua/browse" className="hover:text-fuchsia-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-fuchsia-500"/> {t.nav.browse}</Link></li>
+              <li><Link to="/donghua/browse?status=seasons" className="hover:text-fuchsia-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-fuchsia-500"/> {t.nav.season}</Link></li>
+              <li><Link to="/donghua/genres" className="hover:text-fuchsia-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-fuchsia-500"/> {t.genres.donghuaTitle}</Link></li>
+              <li><Link to="/donghua/schedule" className="hover:text-fuchsia-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-fuchsia-500"/> {t.nav.schedule}</Link></li>
             </ul>
           </div>
 
           <div className="col-span-1 md:col-span-2">
             <h4 className="text-white font-bold mb-6 flex items-center gap-2">Manga</h4>
-            <ul className="space-y-3 text-sm text-slate-400">
-              <li><Link to="/manga" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.home}</Link></li>
-              <li><Link to="/manga/browse" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.browse}</Link></li>
-              <li><Link to="/manga/genres" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.nav.genres}</Link></li>
-              <li><Link to="/manga/browse?status=projects" className="hover:text-violet-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-violet-500"/> {t.manga.projects}</Link></li>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li><Link to="/manga" className="hover:text-rose-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-rose-500"/> {t.nav.home}</Link></li>
+              <li><Link to="/manga/browse" className="hover:text-rose-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-rose-500"/> {t.nav.browse}</Link></li>
+              <li><Link to="/manga/genres" className="hover:text-rose-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-rose-500"/> {t.nav.genres}</Link></li>
+              <li><Link to="/manga/browse?status=projects" className="hover:text-rose-400 transition-colors flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-rose-500"/> {t.manga.projects}</Link></li>
             </ul>
           </div>
 
           {!isDonghua && !isManga && (
-            <div className="col-span-1 md:col-span-3">
+            <div className="col-span-2 md:col-span-3">
               <h4 className="text-white font-bold mb-6">Browse A-Z</h4>
               <div className="flex flex-wrap gap-2">
                   {letters.map((l) => (
